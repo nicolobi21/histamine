@@ -5,9 +5,12 @@
 
 const HC_SYNC = (() => {
 
-  // ── Config (rempli depuis Réglages) ──────────────────────
-  let SUPABASE_URL = localStorage.getItem('hc_supa_url') || '';
-  let SUPABASE_KEY = localStorage.getItem('hc_supa_key') || '';
+  // ── Config pré-configurée (clé anon publique = safe) ─────
+  const DEFAULT_URL = 'https://hoeegzzzihgxpmibdnhl.supabase.co';
+  const DEFAULT_KEY = 'sb_publishable_DpVB7yW3sYwFm1udNtKYTA_OcNY-nRV';
+
+  let SUPABASE_URL = localStorage.getItem('hc_supa_url') || DEFAULT_URL;
+  let SUPABASE_KEY = localStorage.getItem('hc_supa_key') || DEFAULT_KEY;
   let householdId  = localStorage.getItem('hc_household_id') || '';
 
   let syncTimer    = null;
@@ -220,6 +223,9 @@ const HC_SYNC = (() => {
   // ── Init au démarrage ────────────────────────────────────
   async function init() {
     isConfigured = !!(SUPABASE_URL && SUPABASE_KEY);
+    // Sauvegarder les defaults dans localStorage pour que l'UI les affiche
+    if (!localStorage.getItem('hc_supa_url')) localStorage.setItem('hc_supa_url', DEFAULT_URL);
+    if (!localStorage.getItem('hc_supa_key')) localStorage.setItem('hc_supa_key', DEFAULT_KEY);
     if (!isConfigured || !householdId) {
       setSyncStatus('disconnected');
       return;

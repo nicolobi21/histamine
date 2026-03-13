@@ -390,6 +390,45 @@ function isFullyTolerated(recipe) {
   });
 }
 
+function getAlmostTolerated(allRecipes) {
+  const fullyOk = new Set(allRecipes.filter(r => isFullyTolerated(r)).map(r => r.id));
+  const byFood = {};
+  const result = [];
+
+  allRecipes.forEach(recipe => {
+    if (fullyOk.has(recipe.id)) return;
+
+    // Skip recipes with any not_tolerated ingredient
+    const hasBlocked = recipe.ingredients.some(ing =>
+      !ing.optional && getToleranceStatusFuzzy(ing.food) === 'not_tolerated'
+    );
+    if (hasBlocked) return;
+
+    // Find blocking ingredients (untested with score > 0)
+    const blocking = recipe.ingredients.filter(ing => {
+      if (ing.optional) return false;
+      if (isPantryFuzzy(ing.food)) return false;
+      const status = getToleranceStatusFuzzy(ing.food);
+      if (status === 'tolerated') return false;
+      // untested: block only if score > 0 AND known in FOOD_DB
+      const dbFood = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
+      if (!dbFood || dbFood.score === 0) return false;
+      return true;
+    });
+
+    if (blocking.length === 1) {
+      const foodName = blocking[0].food;
+      const key = normalizeFoodName(foodName);
+      if (!byFood[key]) byFood[key] = { name: foodName, recipes: [] };
+      byFood[key].recipes.push(recipe);
+      result.push({ ...recipe, _missingFood: foodName });
+    }
+  });
+
+  const sorted = Object.values(byFood).sort((a, b) => b.recipes.length - a.recipes.length);
+  return { byFood: sorted, allRecipes: result };
+}
+
 // ═══ NAVIGATION ═══
 let currentPage = 'recipes';
 
@@ -416,6 +455,8 @@ HC.recipes = (() => {
   let filterCategory = 'all';
   let filterSearch = '';
   let displayLimit = 32; // lazy-load more recipes
+  let selectedMissingFood = null; // filter section 2 by missing ingredient
+  let displayLimitAlmost = 16; // lazy-load section 2
 
   function getDefaultMealFilter() {
     const h = new Date().getHours();
@@ -489,13 +530,16 @@ HC.recipes = (() => {
     const catLabels = { all: 'Toutes', 'petit-dej': 'Petit-déj', soupe: 'Soupes', plat: 'Plats', accompagnement: 'Accompagnements', dessert: 'Desserts', collation: 'Collations' };
 
     // Only fully-tolerated recipes
-    const allTolerated = getAllRecipes().filter(r => isFullyTolerated(r));
-    const categories = ['all', ...new Set(allTolerated.map(r => r.category))];
+    const allSource = getAllRecipes();
+    const allTolerated = allSource.filter(r => isFullyTolerated(r));
+    const almostData = getAlmostTolerated(allSource);
+    const allCategories = new Set([...allTolerated.map(r => r.category), ...almostData.allRecipes.map(r => r.category)]);
+    const categories = ['all', ...allCategories];
 
     let html = `<h2 style="font-size:18px;margin-bottom:12px;">${getTimeTitle()}</h2>`;
 
-    // Empty state: no tolerated recipes yet
-    if (allTolerated.length === 0) {
+    // Empty state: no tolerated recipes yet (and no almost-tolerated either)
+    if (allTolerated.length === 0 && almostData.allRecipes.length === 0) {
       html += `<div style="text-align:center;padding:40px 20px;">
         <div style="font-size:52px;margin-bottom:16px;">🍽️</div>
         <p style="font-size:16px;font-weight:500;margin-bottom:8px;">Aucune recette disponible</p>
@@ -593,9 +637,9 @@ HC.recipes = (() => {
     const total = recipes.length;
     const visible = recipes.slice(0, displayLimit);
 
-    // Render header
+    // Render section 1 header
     html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="font-size:13px;color:var(--text3);">${total} recette${total !== 1 ? 's' : ''} disponible${total !== 1 ? 's' : ''}</span>
+      <span style="font-size:13px;color:var(--text3);">✅ ${total} recette${total !== 1 ? 's' : ''} disponible${total !== 1 ? 's' : ''}</span>
       <button class="btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="HC.recipes.showAddForm()">+ Ma recette</button>
     </div>`;
     html += `<div class="recipe-grid">`;
@@ -644,6 +688,102 @@ HC.recipes = (() => {
           Voir plus (${total - displayLimit} restantes)
         </button>
       </div>`;
+    }
+
+    // ═══ SECTION 2: Almost tolerated (test +1 ingredient) ═══
+    if (almostData.allRecipes.length > 0) {
+      // Apply same filters to section 2
+      let almostRecipes = almostData.allRecipes;
+      if (filterCategory !== 'all') almostRecipes = almostRecipes.filter(r => r.category === filterCategory);
+      if (filterMealType !== 'all') almostRecipes = almostRecipes.filter(r => r.mealType && r.mealType.includes(filterMealType));
+      if (filterSearch) {
+        const q = filterSearch.toLowerCase();
+        almostRecipes = almostRecipes.filter(r =>
+          r.name.toLowerCase().includes(q) ||
+          r.ingredients.some(i => i.food.toLowerCase().includes(q)) ||
+          (r.tips && r.tips.toLowerCase().includes(q))
+        );
+      }
+      if (selectedMissingFood) {
+        almostRecipes = almostRecipes.filter(r => normalizeFoodName(r._missingFood) === normalizeFoodName(selectedMissingFood));
+      }
+
+      // Recompute byFood counts after filters
+      const filteredByFood = {};
+      almostRecipes.forEach(r => {
+        const key = normalizeFoodName(r._missingFood);
+        if (!filteredByFood[key]) filteredByFood[key] = { name: r._missingFood, count: 0 };
+        filteredByFood[key].count++;
+      });
+      const sortedChips = Object.values(filteredByFood).sort((a, b) => b.count - a.count);
+
+      if (almostRecipes.length > 0) {
+        html += `<div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);">`;
+        html += `<h3 style="font-size:16px;margin-bottom:6px;">🧪 Teste +1 ingrédient</h3>`;
+        html += `<p style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5;">
+          ${almostRecipes.length} recette${almostRecipes.length !== 1 ? 's' : ''} accessibles en ajoutant <strong>1 seul</strong> aliment non testé
+        </p>`;
+
+        // Missing food chips
+        html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">`;
+        if (selectedMissingFood) {
+          html += `<button class="filter-chip active" onclick="HC.recipes.clearMissingFood()" style="background:var(--accent);color:#fff;font-size:11px;">
+            ${escapeHtml(selectedMissingFood)} ×
+          </button>`;
+        }
+        sortedChips.forEach(item => {
+          if (selectedMissingFood && normalizeFoodName(item.name) === normalizeFoodName(selectedMissingFood)) return;
+          const fd = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(item.name));
+          const score = fd ? fd.score : 1;
+          html += `<button class="filter-chip" onclick="HC.recipes.selectMissingFood('${escapeJs(item.name)}')" style="font-size:11px;border-color:var(--level${score}-bg);">
+            + ${escapeHtml(item.name)} <span style="opacity:0.6">(${item.count})</span>
+          </button>`;
+        });
+        html += `</div>`;
+
+        // Sort and limit
+        almostRecipes.sort((a, b) => a.histamineScore - b.histamineScore);
+        const totalAlmost = almostRecipes.length;
+        const visibleAlmost = almostRecipes.slice(0, displayLimitAlmost);
+
+        html += `<div class="recipe-grid">`;
+        visibleAlmost.forEach(r => {
+          const emoji = getRecipeEmoji(r);
+          const gradient = getCategoryGradient(r.category);
+          const photoUrl = getRecipePhotoUrl(r);
+          const photoHtml = photoUrl
+            ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-card-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='none');this.parentElement.querySelector('.recipe-card-emoji').style.display=''"><div class="recipe-card-img-overlay"></div><span class="recipe-card-emoji" style="display:none">${emoji}</span>`
+            : `<span class="recipe-card-emoji">${emoji}</span>`;
+
+          const missingBadge = `<div class="recipe-card-match" style="background:rgba(124,111,247,0.15);color:var(--accent);font-size:11px;">+ ${escapeHtml(r._missingFood)}</div>`;
+
+          html += `<div class="recipe-card" onclick="HC.recipes.openDetail('${r.id}')" style="opacity:0.85;">
+            <div class="recipe-card-visual" style="background:${gradient}">
+              ${photoHtml}
+              <span class="level-badge l${r.histamineScore}" style="position:absolute;top:8px;right:8px;z-index:2;">${levelFromScore(r.histamineScore)}</span>
+            </div>
+            <div class="recipe-card-body">
+              <div class="recipe-card-name">${escapeHtml(r.name)}${r.isCustom ? ' <span style="font-size:10px;color:var(--accent2);">perso</span>' : ''}</div>
+              <div class="recipe-card-meta">
+                <span>⏱ ${r.prepTime + r.cookTime} min</span>
+                <span>👤 ${r.servings}</span>
+                <span>${r.difficulty}</span>
+              </div>
+              ${missingBadge}
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+
+        if (totalAlmost > displayLimitAlmost) {
+          html += `<div style="text-align:center;margin-top:16px;">
+            <button class="btn-secondary" onclick="HC.recipes.loadMoreAlmost()" style="padding:10px 24px;">
+              Voir plus (${totalAlmost - displayLimitAlmost} restantes)
+            </button>
+          </div>`;
+        }
+        html += `</div>`; // close section 2 container
+      }
     }
 
     cont.innerHTML = html;
@@ -879,10 +1019,13 @@ HC.recipes = (() => {
     },
     removeIngredient(idx) { selectedIngredients.splice(idx, 1); render(); },
     clearIngredients() { selectedIngredients = []; render(); },
-    setCatFilter(cat) { filterCategory = cat; displayLimit = 32; render(); },
-    setMealFilter(mt) { filterMealType = mt; displayLimit = 32; render(); },
-    setSearch(val) { filterSearch = val; displayLimit = 32; render(); },
+    setCatFilter(cat) { filterCategory = cat; displayLimit = 32; displayLimitAlmost = 16; render(); },
+    setMealFilter(mt) { filterMealType = mt; displayLimit = 32; displayLimitAlmost = 16; render(); },
+    setSearch(val) { filterSearch = val; displayLimit = 32; displayLimitAlmost = 16; render(); },
     loadMore() { displayLimit += 32; render(); },
+    loadMoreAlmost() { displayLimitAlmost += 16; render(); },
+    selectMissingFood(name) { selectedMissingFood = name; displayLimitAlmost = 16; render(); },
+    clearMissingFood() { selectedMissingFood = null; displayLimitAlmost = 16; render(); },
     starterKit() {
       const starters = [
         // Proteins (all common fresh cuts)
