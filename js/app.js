@@ -197,6 +197,24 @@ function getRecipePhotoUrl(recipe) {
   return null;
 }
 
+// ═══ PEXELS AUTO-PHOTO ═══
+const PEXELS_KEY = 'XFz9YAlbSWPWcrd9hVQTvrZ2KGkDENFb4BSCHFaXCYaKNYqpvTSKReFR';
+async function fetchPexelsPhoto(recipeName) {
+  try {
+    const query = encodeURIComponent('food ' + recipeName);
+    const resp = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=3&orientation=landscape`,
+      { headers: { Authorization: PEXELS_KEY } }
+    );
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const photo = data.photos?.[0];
+    if (!photo) return null;
+    const base = photo.src.large.split('?')[0];
+    return `${base}?auto=compress&cs=tinysrgb&w=640&h=400&fit=crop`;
+  } catch(_) { return null; }
+}
+
 // ═══ STATE ═══
 let entries = [];
 let customFoods = [];
@@ -827,6 +845,14 @@ HC.recipes = (() => {
     viewMode = 'finder';
     render();
     showToast("Recette ajoutée !");
+    // Fetch a matching photo from Pexels in the background
+    fetchPexelsPhoto(name).then(url => {
+      if (url) {
+        recipe.photo = url;
+        saveCustomRecipes();
+        render();
+      }
+    });
   }
 
   return {
