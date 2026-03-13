@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HistaChef">
+<meta name="theme-color" content="#1a1a2e">
+<title>HistaChef — Recettes Low-Histamine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="top-header">
+  <h1>Hista<span>Chef</span></h1>
+  <div class="date-display" id="dateDisplay"></div>
+</div>
+
+<!-- ═══════ PAGE: RECETTES ═══════ -->
+<div class="page active" id="page-recipes">
+  <div id="recipesContent"></div>
+</div>
+
+<!-- ═══════ PAGE: TOLÉRANCE ═══════ -->
+<div class="page" id="page-tolerance">
+  <h2 style="font-size: 18px; margin-bottom: 12px;">Ma Tolérance</h2>
+  <div style="font-size: 13px; color: var(--text2); margin-bottom: 14px;">
+    Indique les aliments que tu tolères pour filtrer les recettes automatiquement.
+  </div>
+  <div class="food-search-wrap" style="margin-bottom: 14px;">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="food-search" id="toleranceSearch" placeholder="Chercher un aliment..." autocomplete="off">
+  </div>
+  <div class="filter-row" id="toleranceCatFilters"></div>
+  <div class="filter-row" id="toleranceStatusFilters">
+    <button class="filter-chip active" data-status="all">Tous</button>
+    <button class="filter-chip" data-status="tolerated">Tolérés</button>
+    <button class="filter-chip" data-status="not_tolerated">Non tolérés</button>
+    <button class="filter-chip" data-status="untested">Non testés</button>
+  </div>
+  <div id="toleranceList" class="card"></div>
+</div>
+
+<!-- ═══════ PAGE: JOURNAL ═══════ -->
+<div class="page" id="page-journal">
+  <div class="quick-add-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <h2 id="journalTitle" style="font-size:18px;">Nouveau repas</h2>
+  </div>
+  <div class="meal-type-row">
+    <div class="meal-chip active" data-meal="Petit-déj">Petit-déj</div>
+    <div class="meal-chip" data-meal="Déjeuner">Déjeuner</div>
+    <div class="meal-chip" data-meal="Goûter">Goûter</div>
+    <div class="meal-chip" data-meal="Dîner">Dîner</div>
+    <div class="meal-chip" data-meal="Collation">Collation</div>
+  </div>
+  <div class="time-row">
+    <span class="time-label">Heure du repas</span>
+    <input type="time" class="input" id="mealTime" style="flex:1;">
+    <span class="time-label">Symptômes</span>
+    <input type="time" class="input" id="symptomTime" style="flex:1;">
+  </div>
+  <div class="food-search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="food-search" id="foodSearch" placeholder="Rechercher un aliment..." autocomplete="off">
+    <div class="food-suggestions" id="foodSuggestions"></div>
+  </div>
+  <div class="custom-food-row">
+    <input type="text" class="input" id="customFood" placeholder="Aliment personnalisé..." style="flex:1;">
+    <button class="btn-secondary" onclick="HC.journal.addCustomFood()">+ Ajouter</button>
+  </div>
+  <div class="selected-foods" id="selectedFoods"></div>
+  <div class="symptom-section">
+    <h3>Symptômes</h3>
+    <div id="symptomSliders"></div>
+  </div>
+  <div class="symptom-section">
+    <h3>Contexte</h3>
+    <div class="context-row" id="contextChips">
+      <div class="ctx-chip" data-ctx="stress-0">Stress 0</div>
+      <div class="ctx-chip" data-ctx="stress-1">Stress 1</div>
+      <div class="ctx-chip" data-ctx="stress-2">Stress 2</div>
+      <div class="ctx-chip" data-ctx="stress-3">Stress 3</div>
+      <div class="ctx-chip" data-ctx="sommeil-mauvais">Mauvais sommeil</div>
+      <div class="ctx-chip" data-ctx="regles">Règles / SPM</div>
+      <div class="ctx-chip" data-ctx="frais">Aliments frais</div>
+      <div class="ctx-chip" data-ctx="surgele">Surgelé</div>
+      <div class="ctx-chip" data-ctx="reste">Restes >24h</div>
+      <div class="ctx-chip" data-ctx="industriel">Plat industriel</div>
+    </div>
+  </div>
+  <textarea class="input" id="mealNotes" placeholder="Notes libres (médicament, observation...)"></textarea>
+  <div class="save-actions" style="margin-top:16px;">
+    <button class="btn-primary" id="saveEntryBtn" onclick="HC.journal.saveEntry()">Enregistrer le repas</button>
+    <button class="btn-ghost edit-cancel-btn" id="cancelEditBtn" onclick="HC.journal.cancelEdit()">Annuler</button>
+  </div>
+  <div style="margin-top: 24px;">
+    <h3 style="font-size: 16px; margin-bottom: 12px;">Aujourd'hui</h3>
+    <div id="todayHistory"></div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: HISTORIQUE ═══════ -->
+<div class="page" id="page-history">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Historique</h2>
+  <div id="fullHistory"></div>
+</div>
+
+<!-- ═══════ PAGE: DASHBOARD ═══════ -->
+<div class="page" id="page-dashboard">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Tableau de bord</h2>
+  <div class="stat-grid" id="statsGrid"></div>
+  <div class="chart-container">
+    <div class="chart-title">Symptômes — 7 derniers jours</div>
+    <div class="timeline-row" id="symptomTimeline"></div>
+    <div class="timeline-labels" id="timelineLabels"></div>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">Aliments les plus fréquents</div>
+    <div class="mini-bar-chart" id="topFoodsChart"></div>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">Aliments suspects (corrélation symptômes)</div>
+    <div id="correlationList"></div>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title">Répartition par catégorie de symptôme</div>
+    <div class="mini-bar-chart" id="symptomCatChart"></div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: INTRODUIRE ═══════ -->
+<div class="page" id="page-introduce">
+  <div id="introduceContent"></div>
+</div>
+
+<!-- ═══════ PAGE: RÉGLAGES ═══════ -->
+<div class="page" id="page-settings">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Réglages</h2>
+
+  <!-- Sync section — rendu dynamiquement par HC.settings.renderSyncSection() -->
+  <div id="syncSection"></div>
+
+  <div class="settings-section">
+    <h3>Données</h3>
+    <button class="setting-btn" onclick="HC.settings.exportData()">Exporter les données (JSON) <span class="arrow">→</span></button>
+    <button class="setting-btn" onclick="document.getElementById('importFile').click()">Importer des données <span class="arrow">→</span></button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="HC.settings.importData(event)">
+    <button class="setting-btn" onclick="HC.settings.confirmClear()" style="color:var(--red);">Effacer toutes les données <span class="arrow">→</span></button>
+  </div>
+  <div class="settings-section">
+    <h3>À propos</h3>
+    <div class="card">
+      <p style="font-size: 13px; color: var(--text2); line-height: 1.6;">
+        <strong>HistaChef</strong> — Recettes et suivi alimentaire pour le SAMA / intolérance à l'histamine.<br><br>
+        Les classements histamine sont indicatifs (sources : Johns Hopkins, Allergy UK, SIGHI). La tolérance individuelle varie. Cet outil ne remplace pas un avis médical.<br><br>
+        <strong>Astuce iPhone :</strong> Ouvre cette page dans Safari → bouton Partager → "Sur l'écran d'accueil" pour l'utiliser comme une app.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TAB BAR ═══════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-page="recipes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z"/><path d="M3 7v13a1 1 0 001 1h16a1 1 0 001-1V7"/><path d="M8 11h8M8 15h5"/></svg>
+    Recettes
+  </button>
+  <button class="tab-btn" data-page="introduce">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+    Introduire
+  </button>
+  <button class="tab-btn" data-page="tolerance">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    Tolérance
+  </button>
+  <button class="tab-btn" data-page="journal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Journal
+  </button>
+  <button class="tab-btn" data-page="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    Historique
+  </button>
+  <button class="tab-btn" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="tab-btn" data-page="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    Réglages
+  </button>
+</div>
+
+<!-- SCRIPTS -->
+<script src="js/data-foods.js?v=3"></script>
+<script src="js/data-recipes.js?v=3"></script>
+<script src="js/recipes-batch-1.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-2.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-3.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-4.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-5.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-6.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-7.js?v=3" onerror="void 0"></script>
+<script src="js/recipes-batch-8.js?v=3" onerror="void 0"></script>
+<script src="js/sync.js?v=1"></script>
+<script src="js/app.js?v=4"></script>
+
+</body>
+</html>

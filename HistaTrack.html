@@ -1,0 +1,1865 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HistaTrack">
+<meta name="theme-color" content="#1a1a2e">
+<title>HistaTrack — Suivi Histamine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #252542;
+  --card: #1e1e35;
+  --card-hover: #2a2a4a;
+  --text: #e8e6f0;
+  --text2: #a9a6c0;
+  --text3: #6e6b8a;
+  --accent: #7c6ff7;
+  --accent2: #a78bfa;
+  --accent-glow: rgba(124,111,247,0.15);
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,0.12);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.12);
+  --orange: #fb923c;
+  --orange-bg: rgba(251,146,60,0.12);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(70px + var(--safe-bottom));
+}
+
+h1,h2,h3 { font-family: 'Fraunces', serif; font-weight: 500; }
+
+/* â•â•â• TOP HEADER â•â•â• */
+.top-header {
+  padding: 16px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.top-header h1 { font-size: 22px; letter-spacing: -0.5px; }
+.top-header h1 span { color: var(--accent2); }
+.top-header .date-display { font-size: 13px; color: var(--text2); }
+
+/* â•â•â• PAGES â•â•â• */
+.page { display: none; padding: 0 16px 24px; animation: fadeIn 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* â•â•â• TAB BAR â•â•â• */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 8px 0 var(--safe-bottom);
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; color: var(--text3);
+  font-size: 10px; font-family: 'DM Sans', sans-serif; padding: 6px 12px;
+  cursor: pointer; transition: color 0.2s;
+}
+.tab-btn.active { color: var(--accent2); }
+.tab-btn svg { width: 22px; height: 22px; }
+
+/* â•â•â• CARDS â•â•â• */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* â•â•â• JOURNAL PAGE â•â•â• */
+.quick-add-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.quick-add-header h2 { font-size: 18px; }
+
+.meal-type-row {
+  display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.meal-type-row::-webkit-scrollbar { display:none; }
+.meal-chip {
+  padding: 8px 16px; border-radius: 20px;
+  background: var(--bg3); border: 1.5px solid transparent;
+  color: var(--text2); font-size: 13px; font-weight: 500;
+  white-space: nowrap; cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.meal-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent2); }
+
+.food-search-wrap {
+  position: relative; margin-bottom: 12px;
+}
+.food-search {
+  width: 100%; padding: 14px 16px 14px 42px;
+  background: var(--bg3); border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 15px; font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color 0.2s;
+}
+.food-search:focus { border-color: var(--accent); }
+.food-search::placeholder { color: var(--text3); }
+.search-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); width: 18px; height: 18px;
+}
+
+.food-suggestions {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--bg2); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm); max-height: 200px; overflow-y: auto;
+  z-index: 50; box-shadow: var(--shadow);
+}
+.food-suggestions.show { display: block; }
+.food-sug-item {
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background 0.15s;
+}
+.food-sug-item:active { background: var(--bg3); }
+.food-sug-name { font-size: 14px; }
+.food-sug-cat { font-size: 11px; color: var(--text3); }
+
+.selected-foods {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 20px;
+}
+.food-tag {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 16px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.food-tag:active { opacity: 0.7; }
+.food-tag .remove { font-size: 16px; opacity: 0.6; }
+
+.food-tag.level-0 { background: var(--green-bg); color: var(--green); }
+.food-tag.level-1 { background: var(--yellow-bg); color: var(--yellow); }
+.food-tag.level-2 { background: var(--orange-bg); color: var(--orange); }
+.food-tag.level-3 { background: var(--red-bg); color: var(--red); }
+
+.custom-food-row {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.custom-food-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg3); border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none;
+}
+.custom-food-input:focus { border-color: var(--accent); }
+.add-custom-btn {
+  padding: 10px 16px; background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-sm); font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 13px;
+}
+
+/* Symptom sliders */
+.symptom-section { margin-bottom: 16px; }
+.symptom-section h3 { font-size: 15px; margin-bottom: 12px; color: var(--text2); font-family: 'DM Sans', sans-serif; font-weight: 600; }
+
+.symptom-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px; padding: 8px 0;
+}
+.symptom-label { width: 70px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.symptom-slider-wrap { flex: 1; position: relative; }
+.symptom-slider {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 6px; border-radius: 3px; background: var(--bg3); outline: none;
+}
+.symptom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--accent);
+  border: 3px solid var(--bg); cursor: pointer;
+  box-shadow: 0 0 8px rgba(124,111,247,0.4);
+}
+.symptom-val {
+  width: 28px; text-align: center; font-size: 14px; font-weight: 600;
+  color: var(--text2); flex-shrink: 0;
+}
+
+/* Context chips */
+.context-row {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+}
+.ctx-chip {
+  padding: 8px 14px; border-radius: 16px;
+  background: var(--bg3); border: 1.5px solid transparent;
+  color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+}
+.ctx-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent2); }
+
+/* Time row */
+.time-row {
+  display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
+}
+.time-input {
+  padding: 10px 14px; background: var(--bg3);
+  border: 1.5px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+  outline: none; flex: 1;
+}
+.time-input:focus { border-color: var(--accent); }
+.time-label { font-size: 12px; color: var(--text3); flex-shrink: 0; }
+
+.notes-input {
+  width: 100%; padding: 12px 14px; background: var(--bg3);
+  border: 1.5px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+  outline: none; resize: vertical; min-height: 60px; margin-bottom: 16px;
+}
+.notes-input:focus { border-color: var(--accent); }
+
+.save-btn {
+  width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent), #9b7ff7);
+  color: #fff; border: none; border-radius: var(--radius-sm);
+  font-size: 16px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px rgba(124,111,247,0.3);
+}
+.save-btn:active { transform: scale(0.98); }
+.save-actions {
+  display: flex; gap: 8px; align-items: center;
+}
+.save-actions .save-btn { flex: 1; }
+.edit-cancel-btn {
+  display: none;
+  padding: 14px 16px;
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+.edit-cancel-btn.show { display: inline-block; }
+
+/* â•â•â• HISTORY â•â•â• */
+.history-entry {
+  padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.history-entry:last-child { border-bottom: none; }
+.he-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.he-meal { font-size: 13px; font-weight: 600; color: var(--accent2); }
+.he-time { font-size: 12px; color: var(--text3); }
+.he-foods { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.he-food-tag {
+  padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;
+}
+.he-symptoms { font-size: 12px; color: var(--text2); }
+.he-score-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;
+}
+.he-notes { font-size: 12px; color: var(--text3); font-style: italic; margin-top: 4px; }
+.he-actions { display: flex; align-items: center; gap: 8px; }
+.he-edit {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.he-delete {
+  background: none; border: none; color: var(--text3); font-size: 18px;
+  cursor: pointer; padding: 4px 8px;
+}
+.he-edit:active,
+.he-delete:active { color: var(--red); }
+
+.day-header {
+  font-size: 13px; font-weight: 600; color: var(--accent2);
+  padding: 12px 0 6px; letter-spacing: 0.5px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* â•â•â• ALIMENTS PAGE â•â•â• */
+.filter-row {
+  display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display:none; }
+.filter-chip {
+  padding: 6px 14px; border-radius: 16px; font-size: 12px;
+  background: var(--bg3); color: var(--text2); border: none;
+  white-space: nowrap; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+.filter-chip.active { background: var(--accent-glow); color: var(--accent2); }
+
+.food-list-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.food-list-item:last-child { border-bottom: none; }
+.fli-left { flex: 1; }
+.fli-name { font-size: 14px; font-weight: 500; }
+.fli-cat { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.fli-comment { font-size: 11px; color: var(--text3); margin-top: 2px; max-width: 220px; }
+.level-badge {
+  padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.level-badge.l0 { background: var(--green-bg); color: var(--green); }
+.level-badge.l1 { background: var(--yellow-bg); color: var(--yellow); }
+.level-badge.l2 { background: var(--orange-bg); color: var(--orange); }
+.level-badge.l3 { background: var(--red-bg); color: var(--red); }
+
+/* â•â•â• DASHBOARD PAGE â•â•â• */
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card); border-radius: var(--radius-sm);
+  padding: 14px; border: 1px solid rgba(255,255,255,0.04);
+}
+.stat-val { font-size: 28px; font-weight: 700; font-family: 'Fraunces', serif; }
+.stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.chart-container {
+  background: var(--card); border-radius: var(--radius); padding: 16px;
+  margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.04);
+}
+.chart-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text2); }
+.mini-bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-size: 11px; color: var(--text2); width: 80px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 16px; background: var(--bg3); border-radius: 8px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 8px; transition: width 0.6s ease; min-width: 2px; }
+.bar-val { font-size: 11px; color: var(--text3); width: 30px; text-align: right; flex-shrink: 0; }
+
+/* Symptom timeline */
+.timeline-row {
+  display: flex; align-items: flex-end; gap: 3px; height: 80px;
+  margin-bottom: 4px; padding: 0 4px;
+}
+.timeline-bar {
+  flex: 1; border-radius: 4px 4px 0 0; min-height: 2px;
+  transition: height 0.4s ease; position: relative;
+}
+.timeline-labels {
+  display: flex; gap: 3px; padding: 0 4px;
+}
+.timeline-label {
+  flex: 1; text-align: center; font-size: 9px; color: var(--text3);
+}
+
+/* Correlation section */
+.corr-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.corr-item:last-child { border-bottom: none; }
+.corr-food { font-size: 13px; font-weight: 500; flex: 1; }
+.corr-score { font-size: 13px; font-weight: 700; }
+.corr-count { font-size: 11px; color: var(--text3); }
+
+/* â•â•â• SETTINGS PAGE â•â•â• */
+.settings-section { margin-bottom: 24px; }
+.settings-section h3 { font-size: 15px; margin-bottom: 12px; color: var(--text2); }
+.setting-btn {
+  width: 100%; padding: 14px 16px; background: var(--card);
+  border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm);
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+  text-align: left; cursor: pointer; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.setting-btn:active { background: var(--card-hover); }
+.setting-btn .arrow { color: var(--text3); }
+
+/* â•â•â• MODAL â•â•â• */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 200; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal-content {
+  background: var(--bg2); border-radius: 20px 20px 0 0;
+  width: 100%; max-height: 80dvh; overflow-y: auto;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.modal-handle {
+  width: 36px; height: 4px; background: var(--text3); border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+/* â•â•â• TOAST â•â•â• */
+.toast {
+  position: fixed; top: calc(var(--safe-top) + 10px); left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--green); color: #000; padding: 12px 24px;
+  border-radius: 12px; font-size: 14px; font-weight: 600;
+  z-index: 300; transition: transform 0.3s ease;
+  box-shadow: 0 4px 20px rgba(52,211,153,0.3);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* â•â•â• EMPTY STATE â•â•â• */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text3);
+}
+.empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+
+/* â•â•â• SCROLLBAR â•â•â• */
+::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="top-header">
+  <h1>Hista<span>Track</span></h1>
+  <div class="date-display" id="dateDisplay"></div>
+</div>
+
+<!-- â•â•â•â•â•â•â• PAGE: JOURNAL â•â•â•â•â•â•â• -->
+<div class="page active" id="page-journal">
+  <div class="quick-add-header">
+    <h2>Nouveau repas</h2>
+  </div>
+
+  <!-- Meal type -->
+  <div class="meal-type-row">
+    <div class="meal-chip active" data-meal="Petit-déj">Petit-déj</div>
+    <div class="meal-chip" data-meal="Déjeuner">Déjeuner</div>
+    <div class="meal-chip" data-meal="Goûter">Goûter</div>
+    <div class="meal-chip" data-meal="Dîner">Dîner</div>
+    <div class="meal-chip" data-meal="Collation">Collation</div>
+  </div>
+
+  <!-- Time -->
+  <div class="time-row">
+    <span class="time-label">Heure du repas</span>
+    <input type="time" class="time-input" id="mealTime">
+    <span class="time-label">Symptômes</span>
+    <input type="time" class="time-input" id="symptomTime">
+  </div>
+
+  <!-- Food search -->
+  <div class="food-search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="food-search" id="foodSearch" placeholder="Rechercher un aliment..." autocomplete="off">
+    <div class="food-suggestions" id="foodSuggestions"></div>
+  </div>
+
+  <!-- Custom food -->
+  <div class="custom-food-row">
+    <input type="text" class="custom-food-input" id="customFood" placeholder="Aliment personnalisé...">
+    <button class="add-custom-btn" onclick="addCustomFood()">+ Ajouter</button>
+  </div>
+
+  <!-- Selected foods -->
+  <div class="selected-foods" id="selectedFoods"></div>
+
+  <!-- Symptoms -->
+  <div class="symptom-section">
+    <h3>Symptômes</h3>
+    <div id="symptomSliders"></div>
+  </div>
+
+  <!-- Context -->
+  <div class="symptom-section">
+    <h3>Contexte</h3>
+    <div class="context-row" id="contextChips">
+      <div class="ctx-chip" data-ctx="stress-0">Stress 0</div>
+      <div class="ctx-chip" data-ctx="stress-1">Stress 1</div>
+      <div class="ctx-chip" data-ctx="stress-2">Stress 2</div>
+      <div class="ctx-chip" data-ctx="stress-3">Stress 3</div>
+      <div class="ctx-chip" data-ctx="sommeil-mauvais">Mauvais sommeil</div>
+      <div class="ctx-chip" data-ctx="regles">Règles / SPM</div>
+      <div class="ctx-chip" data-ctx="frais">Aliments frais</div>
+      <div class="ctx-chip" data-ctx="surgele">Surgelé</div>
+      <div class="ctx-chip" data-ctx="reste">Restes >24h</div>
+      <div class="ctx-chip" data-ctx="industriel">Plat industriel</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <textarea class="notes-input" id="mealNotes" placeholder="Notes libres (médicament, observation...)"></textarea>
+
+  <!-- Save -->
+  <div class="save-actions">
+    <button class="save-btn" id="saveEntryBtn" onclick="saveEntry()">Enregistrer le repas</button>
+    <button class="edit-cancel-btn" id="cancelEditBtn" onclick="cancelEdit()">Annuler</button>
+  </div>
+
+  <!-- Today's history -->
+  <div style="margin-top: 24px;">
+    <h3 style="font-size: 16px; margin-bottom: 12px;">Aujourd'hui</h3>
+    <div id="todayHistory"></div>
+  </div>
+</div>
+
+<!-- â•â•â•â•â•â•â• PAGE: HISTORIQUE â•â•â•â•â•â•â• -->
+<div class="page" id="page-history">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Historique</h2>
+  <div id="fullHistory"></div>
+</div>
+
+<!-- â•â•â•â•â•â•â• PAGE: ALIMENTS â•â•â•â•â•â•â• -->
+<div class="page" id="page-foods">
+  <h2 style="font-size: 18px; margin-bottom: 12px;">Base Aliments</h2>
+  <div class="card" style="margin-bottom: 14px;">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">Ajouter un aliment personnalisé à la base</div>
+    <div class="custom-food-row" style="margin-bottom:8px;">
+      <input type="text" class="custom-food-input" id="foodCreateName" placeholder="Nom de l'aliment...">
+      <button class="add-custom-btn" onclick="addFoodFromDbPage()">+ Ajouter</button>
+    </div>
+    <div class="time-row" style="margin-bottom:0;">
+      <span class="time-label">Catégorie</span>
+      <input type="text" class="time-input" id="foodCreateCat" placeholder="Personnalisé">
+      <span class="time-label">Risque</span>
+      <select class="time-input" id="foodCreateScore">
+        <option value="0">Faible</option>
+        <option value="1" selected>Modéré</option>
+        <option value="2">Élevé</option>
+        <option value="3">Très élevé</option>
+      </select>
+    </div>
+  </div>
+  <div class="food-search-wrap" style="margin-bottom: 14px;">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="food-search" id="foodDbSearch" placeholder="Chercher dans la base..." autocomplete="off">
+  </div>
+  <div class="filter-row" id="categoryFilters"></div>
+  <div class="filter-row" id="levelFilters">
+    <button class="filter-chip active" data-level="all">Tous</button>
+    <button class="filter-chip" data-level="0">Faible</button>
+    <button class="filter-chip" data-level="1">Modéré</button>
+    <button class="filter-chip" data-level="2">Élevé</button>
+    <button class="filter-chip" data-level="3">Très élevé</button>
+  </div>
+  <div id="foodDbList" class="card"></div>
+</div>
+
+<!-- â•â•â•â•â•â•â• PAGE: DASHBOARD â•â•â•â•â•â•â• -->
+<div class="page" id="page-dashboard">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Tableau de bord</h2>
+
+  <div class="stat-grid" id="statsGrid"></div>
+
+  <div class="chart-container">
+    <div class="chart-title">Symptômes — 7 derniers jours</div>
+    <div class="timeline-row" id="symptomTimeline"></div>
+    <div class="timeline-labels" id="timelineLabels"></div>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-title">Aliments les plus fréquents</div>
+    <div class="mini-bar-chart" id="topFoodsChart"></div>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-title">Aliments suspects (corrélation symptômes)</div>
+    <div id="correlationList"></div>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-title">Répartition par catégorie de symptôme</div>
+    <div class="mini-bar-chart" id="symptomCatChart"></div>
+  </div>
+</div>
+
+<!-- â•â•â•â•â•â•â• PAGE: RÃ‰GLAGES â•â•â•â•â•â•â• -->
+<div class="page" id="page-settings">
+  <h2 style="font-size: 18px; margin-bottom: 16px;">Réglages</h2>
+
+  <div class="settings-section">
+    <h3>Données</h3>
+    <button class="setting-btn" onclick="exportData()">Exporter les données (JSON) <span class="arrow">→</span></button>
+    <button class="setting-btn" onclick="document.getElementById('importFile').click()">Importer des données <span class="arrow">→</span></button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="setting-btn" onclick="confirmClear()" style="color:var(--red);">Effacer toutes les données <span class="arrow">→</span></button>
+  </div>
+
+  <div class="settings-section">
+    <h3>À propos</h3>
+    <div class="card">
+      <p style="font-size: 13px; color: var(--text2); line-height: 1.6;">
+        <strong>HistaTrack</strong> — Outil de suivi alimentaire et symptômes pour le SAMA / intolérance à l'histamine.<br><br>
+        Les classements histamine sont indicatifs (sources : Johns Hopkins, Allergy UK, SIGHI). La tolérance individuelle varie. Cet outil ne remplace pas un avis médical.<br><br>
+        <strong>Astuce iPhone :</strong> Ouvre cette page dans Safari → bouton Partager → "Sur l'écran d'accueil" pour l'utiliser comme une app.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- â•â•â•â•â•â•â• TAB BAR â•â•â•â•â•â•â• -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-page="journal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Journal
+  </button>
+  <button class="tab-btn" data-page="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    Historique
+  </button>
+  <button class="tab-btn" data-page="foods">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    Aliments
+  </button>
+  <button class="tab-btn" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="tab-btn" data-page="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    Réglages
+  </button>
+</div>
+
+<script>
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// DATABASE — 58 aliments from the Excel
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let FOOD_DB = [
+  // â•â•â•â•â•â• PROTÃ‰INES â€” Viandes â•â•â•â•â•â•
+  {name:"Poulet frais",cat:"Protéines",score:0,level:"Faible",tip:"Mieux toléré si très frais et vite réfrigéré"},
+  {name:"Dinde fraîche",cat:"Protéines",score:0,level:"Faible",tip:"Comme les viandes fraîches non maturées"},
+  {name:"Boeuf frais",cat:"Protéines",score:0,level:"Faible",tip:"Plutôt faible si très frais, non maturé"},
+  {name:"Agneau frais",cat:"Protéines",score:0,level:"Faible",tip:"Plutôt faible si très frais"},
+  {name:"Porc frais",cat:"Protéines",score:0,level:"Faible",tip:"OK si très frais, attention à la transformation"},
+  {name:"Veau frais",cat:"Protéines",score:0,level:"Faible",tip:"Viande jeune, généralement bien tolérée si fraîche"},
+  {name:"Canard frais",cat:"Protéines",score:1,level:"Modéré",tip:"Plus gras, tolérance variable"},
+  {name:"Lapin frais",cat:"Protéines",score:0,level:"Faible",tip:"Viande maigre généralement bien tolérée"},
+  {name:"Viande hachée maison",cat:"Protéines",score:1,level:"Modéré",tip:"Dépend beaucoup de la fraîcheur, s'altère vite"},
+  {name:"Viande maturée / rassise",cat:"Protéines",score:3,level:"Très élevé",tip:"La maturation augmente fortement l'histamine"},
+  {name:"Oeufs",cat:"Protéines",score:1,level:"Modéré",tip:"Tolérance variable selon les personnes"},
+  {name:"Blanc d'oeuf",cat:"Protéines",score:0,level:"Faible",tip:"Mieux toléré que l'oeuf entier pour certains"},
+  {name:"Tofu frais",cat:"Protéines",score:1,level:"Modéré",tip:"Soja = libérateur d'histamine, variable selon individu"},
+  {name:"Tempeh",cat:"Protéines",score:3,level:"Très élevé",tip:"Soja fermenté, risque élevé"},
+  // â•â•â•â•â•â• PROTÃ‰INES â€” Poissons â•â•â•â•â•â•
+  {name:"Poisson très frais",cat:"Poissons",score:1,level:"Modéré",tip:"Dépend de la fraîcheur et chaîne du froid"},
+  {name:"Cabillaud frais",cat:"Poissons",score:1,level:"Modéré",tip:"OK si très frais, poisson blanc plutôt bien toléré"},
+  {name:"Colin frais",cat:"Poissons",score:1,level:"Modéré",tip:"Poisson blanc, attention à la fraîcheur"},
+  {name:"Sole fraîche",cat:"Poissons",score:1,level:"Modéré",tip:"Poisson plat, généralement mieux toléré frais"},
+  {name:"Truite fraîche",cat:"Poissons",score:1,level:"Modéré",tip:"OK si très fraîche, chaîne du froid cruciale"},
+  {name:"Saumon frais",cat:"Poissons",score:1,level:"Modéré",tip:"Fraîcheur absolument critique pour le saumon"},
+  {name:"Thon frais",cat:"Poissons",score:2,level:"Élevé",tip:"Le thon accumule vite de l'histamine, même frais"},
+  {name:"Sardines fraîches",cat:"Poissons",score:2,level:"Élevé",tip:"Se dégrade vite, cuisson immédiate recommandée"},
+  {name:"Thon en conserve",cat:"Poissons",score:3,level:"Très élevé",tip:"Poisson conservé = risque histamine élevé"},
+  {name:"Sardines en conserve",cat:"Poissons",score:3,level:"Très élevé",tip:"Conserve de poisson = risque élevé"},
+  {name:"Maquereaux en conserve",cat:"Poissons",score:3,level:"Très élevé",tip:"Poisson gras conservé, histamine très élevée"},
+  {name:"Saumon fumé",cat:"Poissons",score:3,level:"Très élevé",tip:"Fumé/transformé souvent mal toléré"},
+  {name:"Hareng fumé / mariné",cat:"Poissons",score:3,level:"Très élevé",tip:"Fumé/mariné = accumulation d'histamine"},
+  {name:"Anchois",cat:"Poissons",score:3,level:"Très élevé",tip:"Saumure et maturation = très riche en histamine"},
+  {name:"Surimi",cat:"Poissons",score:2,level:"Élevé",tip:"Transformé, additifs, qualité variable"},
+  {name:"Fruits de mer",cat:"Poissons",score:3,level:"Très élevé",tip:"Crevettes, moules, huîtres : déclencheurs fréquents"},
+  {name:"Crevettes fraîches",cat:"Poissons",score:2,level:"Élevé",tip:"Libérateur d'histamine même si fraîches"},
+  {name:"Moules",cat:"Poissons",score:3,level:"Très élevé",tip:"Coquillages souvent très problématiques"},
+  // â•â•â•â•â•â• FÃ‰CULENTS & CÃ‰RÃ‰ALES â•â•â•â•â•â•
+  {name:"Riz",cat:"Féculents",score:0,level:"Faible",tip:"Base simple des régimes pauvres en histamine"},
+  {name:"Riz complet",cat:"Féculents",score:0,level:"Faible",tip:"Aussi bien toléré que le riz blanc"},
+  {name:"Quinoa",cat:"Féculents",score:0,level:"Faible",tip:"Graine souvent compatible"},
+  {name:"Pommes de terre",cat:"Féculents",score:0,level:"Faible",tip:"Base simple souvent utilisée"},
+  {name:"Patate douce",cat:"Féculents",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Pâtes nature",cat:"Féculents",score:0,level:"Faible",tip:"Faible si nature et sans sauces déclenchantes"},
+  {name:"Pâtes complètes",cat:"Féculents",score:0,level:"Faible",tip:"Aussi bien tolérées que les pâtes blanches"},
+  {name:"Semoule / couscous",cat:"Féculents",score:0,level:"Faible",tip:"Blé dur nature, généralement bien toléré"},
+  {name:"Boulgour",cat:"Féculents",score:0,level:"Faible",tip:"Blé concassé, souvent bien toléré"},
+  {name:"Maïs / polenta",cat:"Féculents",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Galettes de riz",cat:"Féculents",score:0,level:"Faible",tip:"Snack simple souvent bien toléré"},
+  {name:"Avoine / flocons",cat:"Féculents",score:0,level:"Faible",tip:"Bien toléré nature, sans ajouts"},
+  {name:"Sarrasin",cat:"Féculents",score:0,level:"Faible",tip:"Sans gluten, généralement compatible"},
+  {name:"Millet",cat:"Féculents",score:0,level:"Faible",tip:"Céréale ancienne bien tolérée"},
+  {name:"Tapioca / manioc",cat:"Féculents",score:0,level:"Faible",tip:"Fécule neutre, très bien tolérée"},
+  {name:"Pain frais simple",cat:"Féculents",score:1,level:"Modéré",tip:"Variable selon ingrédients/levure/fermentation"},
+  {name:"Pain au levain",cat:"Féculents",score:2,level:"Élevé",tip:"Fermentation longue = plus de risque"},
+  {name:"Pâte à pizza nature",cat:"Féculents",score:1,level:"Modéré",tip:"Variable selon fermentation, hors garnitures"},
+  {name:"Farine (blé, riz, maïs)",cat:"Féculents",score:0,level:"Faible",tip:"Farines nature sans additifs OK"},
+  {name:"Crackers / biscottes",cat:"Féculents",score:1,level:"Modéré",tip:"Vérifier ingrédients, levure, conservateurs"},
+  // â•â•â•â•â•â• LÃ‰GUMES â•â•â•â•â•â•
+  {name:"Courgette",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Carotte",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Concombre",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien toléré"},
+  {name:"Laitue",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Mâche",cat:"Légumes",score:0,level:"Faible",tip:"Salade douce, bien tolérée"},
+  {name:"Roquette",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien tolérée"},
+  {name:"Brocoli",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien toléré"},
+  {name:"Chou-fleur",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien toléré"},
+  {name:"Chou vert / blanc",cat:"Légumes",score:0,level:"Faible",tip:"OK frais, pas fermenté"},
+  {name:"Chou rouge",cat:"Légumes",score:0,level:"Faible",tip:"OK frais et cuit"},
+  {name:"Choux de Bruxelles",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien tolérés"},
+  {name:"Haricots verts",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien tolérés"},
+  {name:"Petits pois",cat:"Légumes",score:0,level:"Faible",tip:"Frais ou surgelés, bien tolérés"},
+  {name:"Asperges",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien tolérées"},
+  {name:"Fenouil",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien toléré, peut aider la digestion"},
+  {name:"Céleri",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Poireau",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien toléré"},
+  {name:"Navet",cat:"Légumes",score:0,level:"Faible",tip:"Légume racine bien toléré"},
+  {name:"Panais",cat:"Légumes",score:0,level:"Faible",tip:"Légume racine doux, bien toléré"},
+  {name:"Radis",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Betterave",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien tolérée fraîche"},
+  {name:"Courge / butternut",cat:"Légumes",score:0,level:"Faible",tip:"Courges généralement bien tolérées"},
+  {name:"Potiron / potimarron",cat:"Légumes",score:0,level:"Faible",tip:"Bien toléré, saveur douce"},
+  {name:"Endive",cat:"Légumes",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Artichaut",cat:"Légumes",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Oignon",cat:"Légumes",score:0,level:"Faible",tip:"Bien toléré, contient de la quercétine (anti-histamine naturel)"},
+  {name:"Ail",cat:"Légumes",score:0,level:"Faible",tip:"Bien toléré, propriétés anti-inflammatoires"},
+  {name:"Échalote",cat:"Légumes",score:0,level:"Faible",tip:"Comme l'oignon, généralement bien tolérée"},
+  {name:"Poivron",cat:"Légumes",score:1,level:"Modéré",tip:"Tolérance variable, certains le tolèrent bien"},
+  {name:"Champignons",cat:"Légumes",score:1,level:"Modéré",tip:"Tolérance variable, attention à la fraîcheur"},
+  {name:"Tomate",cat:"Légumes",score:2,level:"Élevé",tip:"Souvent classée parmi les aliments problématiques"},
+  {name:"Tomate cuite / sauce",cat:"Légumes",score:3,level:"Très élevé",tip:"La cuisson et transformation augmentent le risque"},
+  {name:"Aubergine",cat:"Légumes",score:2,level:"Élevé",tip:"Souvent problématique en régime pauvre en histamine"},
+  {name:"Avocat",cat:"Légumes",score:2,level:"Élevé",tip:"Tolérance variable, classé à risque"},
+  {name:"Épinards",cat:"Légumes",score:3,level:"Très élevé",tip:"Souvent fortement déconseillés"},
+  {name:"Choucroute",cat:"Légumes",score:3,level:"Très élevé",tip:"Fermenté = fort risque"},
+  {name:"Olives",cat:"Légumes",score:2,level:"Élevé",tip:"Souvent fermentées/marinées, risque modéré à élevé"},
+  {name:"Cornichons",cat:"Légumes",score:3,level:"Très élevé",tip:"Fermentés dans le vinaigre"},
+  // â•â•â•â•â•â• LÃ‰GUMINEUSES â•â•â•â•â•â•
+  {name:"Lentilles",cat:"Légumineuses",score:1,level:"Modéré",tip:"Tolérance variable, certains les tolèrent bien"},
+  {name:"Pois chiches",cat:"Légumineuses",score:1,level:"Modéré",tip:"Tolérance variable, mieux tolérés frais"},
+  {name:"Haricots blancs",cat:"Légumineuses",score:1,level:"Modéré",tip:"Légumineuse à tester individuellement"},
+  {name:"Haricots rouges",cat:"Légumineuses",score:1,level:"Modéré",tip:"Légumineuse à tester individuellement"},
+  {name:"Pois cassés",cat:"Légumineuses",score:1,level:"Modéré",tip:"Généralement assez bien toléré"},
+  {name:"Fèves",cat:"Légumineuses",score:1,level:"Modéré",tip:"Tolérance variable"},
+  {name:"Edamame",cat:"Légumineuses",score:1,level:"Modéré",tip:"Soja jeune, mieux toléré que le soja transformé"},
+  {name:"Houmous",cat:"Légumineuses",score:2,level:"Élevé",tip:"Pois chiches + citron + souvent vinaigre"},
+  // â•â•â•â•â•â• FRUITS â•â•â•â•â•â•
+  {name:"Pomme",cat:"Fruits",score:0,level:"Faible",tip:"Fruit de base souvent bien toléré"},
+  {name:"Poire",cat:"Fruits",score:0,level:"Faible",tip:"Fruit de base souvent bien toléré"},
+  {name:"Myrtilles",cat:"Fruits",score:0,level:"Faible",tip:"Souvent bien tolérées"},
+  {name:"Raisin",cat:"Fruits",score:0,level:"Faible",tip:"Souvent bien toléré frais"},
+  {name:"Mangue",cat:"Fruits",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Pastèque",cat:"Fruits",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Melon",cat:"Fruits",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Cerise",cat:"Fruits",score:0,level:"Faible",tip:"Souvent bien tolérée, propriétés anti-inflammatoires"},
+  {name:"Figue fraîche",cat:"Fruits",score:0,level:"Faible",tip:"OK fraîche, attention séchée"},
+  {name:"Litchi",cat:"Fruits",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Noix de coco",cat:"Fruits",score:0,level:"Faible",tip:"Chair et lait de coco bien tolérés"},
+  {name:"Pêche",cat:"Fruits",score:0,level:"Faible",tip:"Généralement bien tolérée fraîche"},
+  {name:"Abricot",cat:"Fruits",score:0,level:"Faible",tip:"Bien toléré frais"},
+  {name:"Nectarine",cat:"Fruits",score:0,level:"Faible",tip:"Bien tolérée fraîche"},
+  {name:"Prune",cat:"Fruits",score:0,level:"Faible",tip:"OK fraîche, pruneaux plus risqués"},
+  {name:"Grenade",cat:"Fruits",score:0,level:"Faible",tip:"Généralement bien tolérée"},
+  {name:"Kiwi",cat:"Fruits",score:1,level:"Modéré",tip:"Tolérance variable, à tester individuellement"},
+  {name:"Ananas",cat:"Fruits",score:2,level:"Élevé",tip:"Libérateur d'histamine fréquent"},
+  {name:"Banane",cat:"Fruits",score:2,level:"Élevé",tip:"Souvent listée parmi les aliments à surveiller"},
+  {name:"Banane très mûre",cat:"Fruits",score:3,level:"Très élevé",tip:"Plus elle mûrit, plus l'histamine augmente"},
+  {name:"Fraise",cat:"Fruits",score:2,level:"Élevé",tip:"Libérateur d'histamine fréquent"},
+  {name:"Framboise",cat:"Fruits",score:1,level:"Modéré",tip:"Moins problématique que la fraise, à tester"},
+  {name:"Orange",cat:"Fruits",score:2,level:"Élevé",tip:"Agrume, souvent à surveiller"},
+  {name:"Citron",cat:"Fruits",score:2,level:"Élevé",tip:"Agrume, mais parfois mieux toléré que l'orange"},
+  {name:"Pamplemousse",cat:"Fruits",score:2,level:"Élevé",tip:"Agrume à surveiller"},
+  {name:"Mandarine / clémentine",cat:"Fruits",score:2,level:"Élevé",tip:"Agrume, risque modéré à élevé"},
+  {name:"Papaye",cat:"Fruits",score:2,level:"Élevé",tip:"Libérateur d'histamine pour certains"},
+  {name:"Fruits secs (dattes, raisins...)",cat:"Fruits",score:2,level:"Élevé",tip:"Le séchage concentre et augmente l'histamine"},
+  {name:"Pruneaux",cat:"Fruits",score:2,level:"Élevé",tip:"Fruits séchés = risque plus élevé"},
+  // â•â•â•â•â•â• PRODUITS LAITIERS â•â•â•â•â•â•
+  {name:"Lait frais",cat:"Produits laitiers",score:0,level:"Faible",tip:"Frais et pasteurisé, généralement bien toléré"},
+  {name:"Lait UHT",cat:"Produits laitiers",score:0,level:"Faible",tip:"Longue conservation mais peu de risque histamine"},
+  {name:"Beurre",cat:"Produits laitiers",score:0,level:"Faible",tip:"Matière grasse pure, généralement bien tolérée"},
+  {name:"Crème fraîche",cat:"Produits laitiers",score:1,level:"Modéré",tip:"Légère fermentation, tolérance variable"},
+  {name:"Fromage frais / cottage",cat:"Produits laitiers",score:0,level:"Faible",tip:"Non affiné, généralement bien toléré"},
+  {name:"Ricotta",cat:"Produits laitiers",score:0,level:"Faible",tip:"Fromage frais non affiné"},
+  {name:"Mascarpone",cat:"Produits laitiers",score:0,level:"Faible",tip:"Crémeux non affiné, bien toléré"},
+  {name:"Mozzarella fraîche",cat:"Produits laitiers",score:1,level:"Modéré",tip:"Moins maturée, tolérance variable"},
+  {name:"Feta",cat:"Produits laitiers",score:2,level:"Élevé",tip:"Saumure et affinage léger, à surveiller"},
+  {name:"Chèvre frais",cat:"Produits laitiers",score:1,level:"Modéré",tip:"Mieux toléré que les fromages affinés"},
+  {name:"Chèvre affiné",cat:"Produits laitiers",score:2,level:"Élevé",tip:"L'affinage augmente l'histamine"},
+  {name:"Yaourt",cat:"Produits laitiers",score:2,level:"Élevé",tip:"Produit fermenté, souvent mal toléré"},
+  {name:"Kéfir",cat:"Produits laitiers",score:2,level:"Élevé",tip:"Fermenté, mêmes risques que le yaourt"},
+  {name:"Emmental",cat:"Produits laitiers",score:2,level:"Élevé",tip:"Semi-affiné, risque modéré à élevé"},
+  {name:"Gruyère",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Fromage affiné = risque élevé"},
+  {name:"Comté",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Longue maturation = histamine élevée"},
+  {name:"Parmesan",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Fromage très affiné = risque très élevé"},
+  {name:"Cheddar",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Fromage affiné = risque élevé"},
+  {name:"Roquefort / bleu",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Moisissure + affinage = très élevé"},
+  {name:"Camembert / Brie",cat:"Produits laitiers",score:3,level:"Très élevé",tip:"Croûte fleurie et affinage = risque élevé"},
+  {name:"Raclette",cat:"Produits laitiers",score:2,level:"Élevé",tip:"Semi-affiné, risque modéré"},
+  // â•â•â•â•â•â• Ã‰PICES & HERBES â•â•â•â•â•â•
+  {name:"Sel",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Aucun risque histamine"},
+  {name:"Poivre noir",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Généralement bien toléré en quantité normale"},
+  {name:"Curcuma",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Anti-inflammatoire, souvent recommandé dans le SAMA"},
+  {name:"Gingembre frais",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Propriétés anti-inflammatoires, souvent bien toléré"},
+  {name:"Basilic frais",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Persil frais",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Ciboulette",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Menthe fraîche",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Coriandre fraîche",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Aneth frais",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fraîche bien tolérée"},
+  {name:"Romarin",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe aromatique bien tolérée"},
+  {name:"Thym",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe aromatique bien tolérée"},
+  {name:"Origan",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Généralement bien toléré"},
+  {name:"Laurier",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Feuille aromatique sans risque"},
+  {name:"Sauge",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe aromatique bien tolérée"},
+  {name:"Estragon",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Herbe fine bien tolérée"},
+  {name:"Cumin",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Épice généralement bien tolérée"},
+  {name:"Coriandre moulue",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Épice douce bien tolérée"},
+  {name:"Cardamome",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Épice douce, pas de risque connu"},
+  {name:"Safran",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Épice rare, aucun risque histamine connu"},
+  {name:"Vanille",cat:"Épices & Herbes",score:0,level:"Faible",tip:"Pas de risque histamine"},
+  {name:"Cannelle",cat:"Épices & Herbes",score:1,level:"Modéré",tip:"Libérateur d'histamine pour certains, à tester"},
+  {name:"Noix de muscade",cat:"Épices & Herbes",score:1,level:"Modéré",tip:"En petite quantité OK, sensibilité variable"},
+  {name:"Paprika doux",cat:"Épices & Herbes",score:1,level:"Modéré",tip:"Piment séché, tolérance variable"},
+  {name:"Curry (mélange)",cat:"Épices & Herbes",score:1,level:"Modéré",tip:"Mélange variable, peut contenir des épices à risque"},
+  {name:"Clou de girofle",cat:"Épices & Herbes",score:0,level:"Faible",tip:"En petite quantité, pas de risque connu"},
+  {name:"Piment / chili",cat:"Épices & Herbes",score:2,level:"Élevé",tip:"Peut déclencher une libération de médiateurs"},
+  {name:"Piment de Cayenne",cat:"Épices & Herbes",score:2,level:"Élevé",tip:"Fort, peut provoquer une libération d'histamine"},
+  {name:"Harissa",cat:"Épices & Herbes",score:2,level:"Élevé",tip:"Piment + souvent vinaigre, double risque"},
+  {name:"Ras el hanout",cat:"Épices & Herbes",score:1,level:"Modéré",tip:"Mélange complexe, vérifier la composition"},
+  // â•â•â•â•â•â• NOIX & GRAINES â•â•â•â•â•â•
+  {name:"Amandes",cat:"Noix & Graines",score:0,level:"Faible",tip:"Généralement bien tolérées"},
+  {name:"Graines de courge",cat:"Noix & Graines",score:0,level:"Faible",tip:"Souvent bien tolérées"},
+  {name:"Graines de tournesol",cat:"Noix & Graines",score:0,level:"Faible",tip:"Souvent bien tolérées"},
+  {name:"Graines de sésame",cat:"Noix & Graines",score:0,level:"Faible",tip:"Généralement bien tolérées"},
+  {name:"Graines de lin",cat:"Noix & Graines",score:0,level:"Faible",tip:"Oméga-3, généralement bien tolérées"},
+  {name:"Graines de chia",cat:"Noix & Graines",score:0,level:"Faible",tip:"Généralement bien tolérées"},
+  {name:"Noix de cajou",cat:"Noix & Graines",score:1,level:"Modéré",tip:"Tolérance variable selon les individus"},
+  {name:"Noisettes",cat:"Noix & Graines",score:1,level:"Modéré",tip:"Tolérance variable"},
+  {name:"Pistaches",cat:"Noix & Graines",score:1,level:"Modéré",tip:"À tester individuellement"},
+  {name:"Noix",cat:"Noix & Graines",score:2,level:"Élevé",tip:"Souvent citée comme libérateur d'histamine"},
+  {name:"Cacahuètes / arachides",cat:"Noix & Graines",score:2,level:"Élevé",tip:"Libérateur d'histamine fréquent"},
+  {name:"Noix du Brésil",cat:"Noix & Graines",score:1,level:"Modéré",tip:"Tolérance variable, riche en sélénium"},
+  {name:"Pignons de pin",cat:"Noix & Graines",score:0,level:"Faible",tip:"Généralement bien tolérés"},
+  // â•â•â•â•â•â• CONDIMENTS & SAUCES â•â•â•â•â•â•
+  {name:"Moutarde",cat:"Condiments",score:2,level:"Élevé",tip:"Souvent fermentée et/ou avec vinaigre"},
+  {name:"Ketchup",cat:"Condiments",score:3,level:"Très élevé",tip:"Tomate + produit transformé + vinaigre"},
+  {name:"Sauce soja",cat:"Condiments",score:3,level:"Très élevé",tip:"Produit fermenté"},
+  {name:"Vinaigre",cat:"Condiments",score:3,level:"Très élevé",tip:"Fermenté, souvent déconseillé"},
+  {name:"Vinaigre de cidre",cat:"Condiments",score:2,level:"Élevé",tip:"Fermenté mais parfois mieux toléré que le vinaigre de vin"},
+  {name:"Vinaigre balsamique",cat:"Condiments",score:3,level:"Très élevé",tip:"Fermentation longue et concentrée"},
+  {name:"Mayonnaise",cat:"Condiments",score:2,level:"Élevé",tip:"Variable selon ingrédients (vinaigre, moutarde)"},
+  {name:"Pesto",cat:"Condiments",score:2,level:"Élevé",tip:"Noix de pin + parmesan + souvent transformation"},
+  {name:"Sauce tomate",cat:"Condiments",score:3,level:"Très élevé",tip:"Tomate cuite + souvent vinaigre"},
+  {name:"Sauce worcestershire",cat:"Condiments",score:3,level:"Très élevé",tip:"Très fermentée, anchois, vinaigre"},
+  {name:"Sauce barbecue",cat:"Condiments",score:3,level:"Très élevé",tip:"Tomate + vinaigre + sucre transformé"},
+  {name:"Sauce teriyaki",cat:"Condiments",score:3,level:"Très élevé",tip:"Soja fermenté + mirin"},
+  {name:"Nuoc-mâm / sauce poisson",cat:"Condiments",score:3,level:"Très élevé",tip:"Poisson fermenté, très riche en histamine"},
+  {name:"Tahini",cat:"Condiments",score:0,level:"Faible",tip:"Purée de sésame, généralement bien tolérée"},
+  {name:"Purée d'amande",cat:"Condiments",score:0,level:"Faible",tip:"Oléagineux broyé, généralement bien toléré"},
+  // â•â•â•â•â•â• MATIÃˆRES GRASSES â•â•â•â•â•â•
+  {name:"Huile d'olive",cat:"Matières grasses",score:0,level:"Faible",tip:"Généralement bien tolérée"},
+  {name:"Huile de colza",cat:"Matières grasses",score:0,level:"Faible",tip:"Neutre, bien tolérée"},
+  {name:"Huile de coco",cat:"Matières grasses",score:0,level:"Faible",tip:"Bien tolérée, saveur douce"},
+  {name:"Huile de tournesol",cat:"Matières grasses",score:0,level:"Faible",tip:"Neutre, bien tolérée"},
+  {name:"Huile de lin",cat:"Matières grasses",score:0,level:"Faible",tip:"Riche en oméga-3, à consommer crue"},
+  {name:"Ghee (beurre clarifié)",cat:"Matières grasses",score:0,level:"Faible",tip:"Souvent très bien toléré, pas de protéines laitières"},
+  // â•â•â•â•â•â• SUCRÃ‰S â•â•â•â•â•â•
+  {name:"Sucre blanc",cat:"Sucrés",score:0,level:"Faible",tip:"Pas de risque histamine direct"},
+  {name:"Sucre roux / cassonade",cat:"Sucrés",score:0,level:"Faible",tip:"Pas de risque histamine direct"},
+  {name:"Miel",cat:"Sucrés",score:0,level:"Faible",tip:"Généralement bien toléré, choisir pur"},
+  {name:"Sirop d'érable",cat:"Sucrés",score:0,level:"Faible",tip:"Pas de risque histamine connu"},
+  {name:"Sirop d'agave",cat:"Sucrés",score:0,level:"Faible",tip:"Alternative sucrante sans risque"},
+  {name:"Confiture maison",cat:"Sucrés",score:1,level:"Modéré",tip:"Dépend du fruit utilisé et de la cuisson"},
+  {name:"Chocolat noir",cat:"Sucrés",score:3,level:"Très élevé",tip:"Cacao = déclencheur fréquent d'histamine"},
+  {name:"Chocolat au lait",cat:"Sucrés",score:3,level:"Très élevé",tip:"Cacao + lait, double risque potentiel"},
+  {name:"Cacao en poudre",cat:"Sucrés",score:3,level:"Très élevé",tip:"Riche en amines biogènes"},
+  {name:"Pâte à tartiner (Nutella...)",cat:"Sucrés",score:3,level:"Très élevé",tip:"Cacao + noisettes + transformation industrielle"},
+  // â•â•â•â•â•â• BOISSONS â•â•â•â•â•â•
+  {name:"Eau",cat:"Boissons",score:0,level:"Faible",tip:"Sans risque histamine"},
+  {name:"Eau gazeuse",cat:"Boissons",score:0,level:"Faible",tip:"Sans risque histamine"},
+  {name:"Tisane (camomille, tilleul)",cat:"Boissons",score:0,level:"Faible",tip:"Infusions non fermentées, généralement OK"},
+  {name:"Tisane de gingembre",cat:"Boissons",score:0,level:"Faible",tip:"Anti-inflammatoire, souvent recommandée"},
+  {name:"Tisane de menthe",cat:"Boissons",score:0,level:"Faible",tip:"Souvent bien tolérée"},
+  {name:"Rooibos",cat:"Boissons",score:0,level:"Faible",tip:"Non fermenté (ou peu), bon substitut au thé"},
+  {name:"Lait végétal (riz, avoine)",cat:"Boissons",score:0,level:"Faible",tip:"Sans fermentation, généralement bien toléré"},
+  {name:"Lait de coco",cat:"Boissons",score:0,level:"Faible",tip:"Bien toléré, alternative crémeuse"},
+  {name:"Lait d'amande",cat:"Boissons",score:0,level:"Faible",tip:"Bien toléré si sans additifs"},
+  {name:"Café",cat:"Boissons",score:1,level:"Modéré",tip:"Peut aggraver chez certaines personnes"},
+  {name:"Thé noir",cat:"Boissons",score:1,level:"Modéré",tip:"À surveiller individuellement"},
+  {name:"Thé vert",cat:"Boissons",score:1,level:"Modéré",tip:"Moins fermenté que le noir, mais à tester"},
+  {name:"Jus d'orange",cat:"Boissons",score:2,level:"Élevé",tip:"Agrume + souvent pasteurisé/stocké"},
+  {name:"Jus de tomate",cat:"Boissons",score:3,level:"Très élevé",tip:"Tomate transformée, risque élevé"},
+  {name:"Smoothie aux fruits rouges",cat:"Boissons",score:2,level:"Élevé",tip:"Dépend des fruits, fraises = risque"},
+  {name:"Vin rouge",cat:"Boissons",score:3,level:"Très élevé",tip:"Classique déclencheur, riche en amines"},
+  {name:"Vin blanc",cat:"Boissons",score:2,level:"Élevé",tip:"Moins d'histamine que le rouge mais reste fermenté"},
+  {name:"Bière",cat:"Boissons",score:3,level:"Très élevé",tip:"Fermentée, souvent mal tolérée"},
+  {name:"Champagne / prosecco",cat:"Boissons",score:3,level:"Très élevé",tip:"Double fermentation, risque élevé"},
+  {name:"Spiritueux (vodka, gin)",cat:"Boissons",score:1,level:"Modéré",tip:"Distillés = moins d'histamine que le vin, mais l'alcool inhibe la DAO"},
+  {name:"Kombucha",cat:"Boissons",score:3,level:"Très élevé",tip:"Thé fermenté, risque très élevé"},
+  // â•â•â•â•â•â• CHARCUTERIES & TRANSFORMÃ‰S â•â•â•â•â•â•
+  {name:"Jambon",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Viande transformée/affinée"},
+  {name:"Jambon cuit (blanc)",cat:"Charcuteries",score:2,level:"Élevé",tip:"Moins affiné que le jambon sec, mais transformé"},
+  {name:"Jambon sec / cru",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Longue maturation = très riche en histamine"},
+  {name:"Salami",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Charcuterie fermentée/affinée"},
+  {name:"Saucisson sec",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Fermenté et maturé, très élevé en histamine"},
+  {name:"Chorizo",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Fermenté/affiné + épices"},
+  {name:"Bacon",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Produit transformé souvent mal toléré"},
+  {name:"Saucisse fraîche",cat:"Charcuteries",score:1,level:"Modéré",tip:"Moins risqué si fraîche, vérifier ingrédients"},
+  {name:"Pâté / terrine",cat:"Charcuteries",score:3,level:"Très élevé",tip:"Transformation + conservation = risque élevé"},
+  {name:"Lardons",cat:"Charcuteries",score:2,level:"Élevé",tip:"Transformés, souvent fumés, à surveiller"},
+  // â•â•â•â•â•â• FERMENTÃ‰S â•â•â•â•â•â•
+  {name:"Kimchi",cat:"Fermentés",score:3,level:"Très élevé",tip:"Fermenté, très riche en histamine"},
+  {name:"Miso",cat:"Fermentés",score:3,level:"Très élevé",tip:"Soja fermenté longue durée"},
+  {name:"Natto",cat:"Fermentés",score:3,level:"Très élevé",tip:"Soja fermenté, très riche en amines"},
+  {name:"Levure alimentaire",cat:"Fermentés",score:2,level:"Élevé",tip:"Peut déclencher des réactions chez certains"},
+  {name:"Levure de bière",cat:"Fermentés",score:3,level:"Très élevé",tip:"Fermentée, souvent mal tolérée"},
+  // â•â•â•â•â•â• CONTEXTE â•â•â•â•â•â•
+  {name:"Restes réfrigérés >24h",cat:"Contexte",score:3,level:"Très élevé",tip:"Même un aliment faible peut devenir problématique"},
+  {name:"Plat industriel",cat:"Contexte",score:2,level:"Élevé",tip:"Risque lié aux additifs, conservation"},
+  {name:"Plat réchauffé",cat:"Contexte",score:2,level:"Élevé",tip:"Le réchauffage n'élimine pas l'histamine accumulée"}
+];
+
+const SYMPTOM_CATEGORIES = [
+  {id:"digestif", label:"Digestif", emoji:"🫄"},
+  {id:"peau", label:"Peau", emoji:"🔴"},
+  {id:"neuro", label:"Neuro", emoji:"🧠"},
+  {id:"respOrl", label:"Resp/ORL", emoji:"👃"},
+  {id:"cardio", label:"Cardio", emoji:"💓"},
+  {id:"autres", label:"Autres", emoji:"📋"}
+];
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// STATE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let entries = normalizeLoadedEntries(JSON.parse(localStorage.getItem('ht_entries') || '[]'));
+let selectedMeal = "Petit-déj";
+let selectedFoods = [];
+let activeContexts = [];
+let editingEntryId = null;
+const CUSTOM_FOODS_STORAGE_KEY = 'ht_custom_foods';
+let customFoods = loadCustomFoods();
+mergeCustomFoodsIntoDb();
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// INIT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function init() {
+  updateDateDisplay();
+  setupTabs();
+  setupMealChips();
+  setupFoodSearch();
+  setupCustomFoodInput();
+  setupSymptomSliders();
+  setupContextChips();
+  setupFoodDbPage();
+  setDefaultTime();
+  updateEditorState();
+  renderTodayHistory();
+}
+
+function updateDateDisplay() {
+  const d = new Date();
+  const opts = {weekday:'long', day:'numeric', month:'long'};
+  document.getElementById('dateDisplay').textContent = d.toLocaleDateString('fr-FR', opts);
+}
+
+function setDefaultTime() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('mealTime').value = `${h}:${m}`;
+}
+
+function normalizeFoodName(name) {
+  return String(name || '').trim().toLowerCase();
+}
+
+function clampScore(score) {
+  const n = Number(score);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(0, Math.min(3, Math.round(n)));
+}
+
+function levelFromScore(score) {
+  const labels = ['Faible', 'Modéré', 'Élevé', 'Très élevé'];
+  return labels[clampScore(score)];
+}
+
+function toFoodRecord(food) {
+  if (!food || !food.name) return null;
+  const name = String(food.name).trim();
+  if (!name) return null;
+  const score = clampScore(food.score);
+  return {
+    name,
+    cat: food.cat || "Personnalisé",
+    score,
+    level: food.level || levelFromScore(score),
+    tip: food.tip || "Aliment personnalisé",
+    isCustom: true
+  };
+}
+
+function loadCustomFoods() {
+  try {
+    const data = JSON.parse(localStorage.getItem(CUSTOM_FOODS_STORAGE_KEY) || '[]');
+    if (!Array.isArray(data)) return [];
+    return data.map(toFoodRecord).filter(Boolean);
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveCustomFoods() {
+  localStorage.setItem(CUSTOM_FOODS_STORAGE_KEY, JSON.stringify(customFoods));
+}
+
+function mergeCustomFoodsIntoDb() {
+  const seen = new Set(FOOD_DB.map(f => normalizeFoodName(f.name)));
+  customFoods.forEach(food => {
+    const key = normalizeFoodName(food.name);
+    if (!key || seen.has(key)) return;
+    FOOD_DB.push(food);
+    seen.add(key);
+  });
+}
+
+function normalizeLoadedEntries(rawEntries) {
+  if (!Array.isArray(rawEntries)) return [];
+  return rawEntries.map((entry, index) => {
+    const symptoms = entry && entry.symptoms ? entry.symptoms : {};
+    const totalSymptoms = Number.isFinite(Number(entry && entry.totalSymptoms))
+      ? Number(entry.totalSymptoms)
+      : SYMPTOM_CATEGORIES.reduce((sum, s) => sum + (Number(symptoms[s.id]) || 0), 0);
+    return {
+      id: entry && entry.id != null ? entry.id : `entry-${Date.now()}-${index}`,
+      date: entry && entry.date ? entry.date : new Date().toISOString().split('T')[0],
+      mealTime: entry && entry.mealTime ? entry.mealTime : '',
+      symptomTime: entry && entry.symptomTime ? entry.symptomTime : '',
+      meal: entry && entry.meal ? entry.meal : 'Repas',
+      foods: Array.isArray(entry && entry.foods) ? entry.foods : [],
+      symptoms,
+      totalSymptoms,
+      contexts: Array.isArray(entry && entry.contexts) ? entry.contexts : [],
+      notes: entry && entry.notes ? entry.notes : ''
+    };
+  });
+}
+
+function escapeJsString(value) {
+  return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// TABS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function goToPage(pageName) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === pageName);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageName).classList.add('active');
+  if (pageName === 'history') renderFullHistory();
+  if (pageName === 'dashboard') renderDashboard();
+  if (pageName === 'foods') renderFoodDb();
+}
+
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => goToPage(btn.dataset.page));
+  });
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// MEAL CHIPS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function setupMealChips() {
+  document.querySelectorAll('.meal-chip').forEach(chip => {
+    chip.addEventListener('click', () => setMeal(chip.dataset.meal));
+  });
+  setMeal(selectedMeal);
+}
+
+function setMeal(meal) {
+  selectedMeal = meal || selectedMeal;
+  document.querySelectorAll('.meal-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.meal === selectedMeal);
+  });
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// FOOD SEARCH
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function setupFoodSearch() {
+  const input = document.getElementById('foodSearch');
+  const suggestions = document.getElementById('foodSuggestions');
+
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase().trim();
+    if (q.length < 1) { suggestions.classList.remove('show'); return; }
+    const results = FOOD_DB.filter(f =>
+      f.name.toLowerCase().includes(q) || f.cat.toLowerCase().includes(q)
+    ).slice(0, 8);
+
+    if (results.length === 0) { suggestions.classList.remove('show'); return; }
+
+    suggestions.innerHTML = results.map(f => `
+      <div class="food-sug-item" onclick="selectFood('${escapeJsString(f.name)}')">
+        <div>
+          <div class="food-sug-name">${f.name}</div>
+          <div class="food-sug-cat">${f.cat}</div>
+        </div>
+        <span class="level-badge l${f.score}">${f.level}</span>
+      </div>
+    `).join('');
+    suggestions.classList.add('show');
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => suggestions.classList.remove('show'), 200);
+  });
+}
+
+function setupCustomFoodInput() {
+  document.getElementById('customFood').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    addCustomFood();
+  });
+}
+
+function upsertCustomFood(name, category, score) {
+  const normalizedName = normalizeFoodName(name);
+  if (!normalizedName) return {ok: false};
+
+  const existing = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizedName);
+  if (existing) return {ok: true, created: false, food: existing};
+
+  const safeScore = clampScore(score);
+  const safeCategory = (category || "Personnalisé").trim() || "Personnalisé";
+  const customFood = toFoodRecord({
+    name: String(name).trim(),
+    cat: safeCategory,
+    score: safeScore,
+    level: levelFromScore(safeScore),
+    tip: "Ajouté par l'utilisateur"
+  });
+  if (!customFood) return {ok: false};
+
+  customFoods.push(customFood);
+  FOOD_DB.push(customFood);
+  saveCustomFoods();
+  return {ok: true, created: true, food: customFood};
+}
+
+function selectFood(name) {
+  const key = normalizeFoodName(name);
+  if (!key) return;
+  if (selectedFoods.find(f => normalizeFoodName(f.name) === key)) return;
+
+  const dbFood = FOOD_DB.find(f => normalizeFoodName(f.name) === key);
+  const selected = dbFood
+    ? {name: dbFood.name, score: clampScore(dbFood.score), cat: dbFood.cat, level: dbFood.level}
+    : {name, cat: "Personnalisé", score: 1, level: levelFromScore(1)};
+
+  selectedFoods.push(selected);
+  renderSelectedFoods();
+  document.getElementById('foodSearch').value = '';
+  document.getElementById('foodSuggestions').classList.remove('show');
+}
+
+function addCustomFood() {
+  const input = document.getElementById('customFood');
+  const name = input.value.trim();
+  if (!name) return;
+
+  const result = upsertCustomFood(name, "Personnalisé", 1);
+  if (!result.ok) return;
+  selectFood(result.food.name);
+  renderFoodDb();
+  showToast(result.created ? "Aliment personnalisé ajouté" : "Aliment déjà présent", "var(--accent)");
+  input.value = '';
+}
+
+function addFoodFromDbPage() {
+  const nameInput = document.getElementById('foodCreateName');
+  const catInput = document.getElementById('foodCreateCat');
+  const scoreInput = document.getElementById('foodCreateScore');
+  const name = nameInput.value.trim();
+  if (!name) {
+    showToast("Indique un nom d'aliment", "var(--orange)");
+    return;
+  }
+
+  const category = (catInput.value || '').trim() || 'Personnalisé';
+  const score = Number(scoreInput.value);
+  const result = upsertCustomFood(name, category, score);
+  if (!result.ok) return;
+
+  renderFoodDb();
+  nameInput.value = '';
+  catInput.value = '';
+  scoreInput.value = '1';
+  showToast(result.created ? "Aliment ajouté à la base" : "Cet aliment existe déjà", result.created ? "var(--accent)" : "var(--orange)");
+}
+
+function removeFood(idx) {
+  selectedFoods.splice(idx, 1);
+  renderSelectedFoods();
+}
+
+function renderSelectedFoods() {
+  const cont = document.getElementById('selectedFoods');
+  cont.innerHTML = selectedFoods.map((f, i) => `
+    <div class="food-tag level-${f.score}" onclick="removeFood(${i})">
+      ${f.name} <span class="remove">×</span>
+    </div>
+  `).join('');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// SYMPTOM SLIDERS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function setupSymptomSliders() {
+  const cont = document.getElementById('symptomSliders');
+  cont.innerHTML = SYMPTOM_CATEGORIES.map(s => `
+    <div class="symptom-row">
+      <span class="symptom-label">${s.emoji} ${s.label}</span>
+      <div class="symptom-slider-wrap">
+        <input type="range" class="symptom-slider" id="sym_${s.id}" min="0" max="10" value="0"
+          oninput="document.getElementById('val_${s.id}').textContent=this.value">
+      </div>
+      <span class="symptom-val" id="val_${s.id}">0</span>
+    </div>
+  `).join('');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// CONTEXT CHIPS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function setupContextChips() {
+  document.querySelectorAll('.ctx-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const ctx = chip.dataset.ctx;
+      // Radio for stress levels
+      if (ctx.startsWith('stress-')) {
+        document.querySelectorAll('.ctx-chip[data-ctx^="stress-"]').forEach(c => {
+          c.classList.remove('active');
+          activeContexts = activeContexts.filter(x => !x.startsWith('stress-'));
+        });
+      }
+      chip.classList.toggle('active');
+      if (chip.classList.contains('active')) {
+        activeContexts.push(ctx);
+      } else {
+        activeContexts = activeContexts.filter(x => x !== ctx);
+      }
+    });
+  });
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// SAVE ENTRY
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function saveEntry() {
+  if (selectedFoods.length === 0) {
+    showToast("Ajoute au moins un aliment !", "var(--orange)");
+    return;
+  }
+
+  const symptoms = {};
+  let totalSym = 0;
+  SYMPTOM_CATEGORIES.forEach(s => {
+    const val = parseInt(document.getElementById('sym_' + s.id).value);
+    symptoms[s.id] = val;
+    totalSym += val;
+  });
+
+  const isEditing = editingEntryId !== null;
+  const existingEntry = isEditing
+    ? entries.find(e => String(e.id) === String(editingEntryId))
+    : null;
+
+  const entry = {
+    id: existingEntry ? existingEntry.id : Date.now(),
+    date: existingEntry ? existingEntry.date : new Date().toISOString().split('T')[0],
+    mealTime: document.getElementById('mealTime').value,
+    symptomTime: document.getElementById('symptomTime').value,
+    meal: selectedMeal,
+    foods: selectedFoods.map(f => ({name:f.name, score:clampScore(f.score), cat:f.cat})),
+    symptoms,
+    totalSymptoms: totalSym,
+    contexts: [...new Set(activeContexts)],
+    notes: document.getElementById('mealNotes').value.trim()
+  };
+
+  if (existingEntry) {
+    entries = entries.map(e => String(e.id) === String(editingEntryId) ? entry : e);
+  } else {
+    entries.push(entry);
+  }
+
+  saveEntries();
+  showToast(existingEntry ? "Repas mis à jour !" : "Repas enregistré !");
+  resetForm();
+  renderTodayHistory();
+  if (document.getElementById('page-history').classList.contains('active')) renderFullHistory();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+function saveEntries() {
+  localStorage.setItem('ht_entries', JSON.stringify(entries));
+}
+
+function resetForm() {
+  editingEntryId = null;
+  selectedFoods = [];
+  activeContexts = [];
+  const defaultMeal = document.querySelector('.meal-chip')?.dataset.meal || selectedMeal;
+  setMeal(defaultMeal);
+  renderSelectedFoods();
+  SYMPTOM_CATEGORIES.forEach(s => {
+    document.getElementById('sym_' + s.id).value = 0;
+    document.getElementById('val_' + s.id).textContent = '0';
+  });
+  document.querySelectorAll('.ctx-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('mealNotes').value = '';
+  document.getElementById('customFood').value = '';
+  setDefaultTime();
+  document.getElementById('symptomTime').value = '';
+  updateEditorState();
+}
+
+function updateEditorState() {
+  const isEditing = editingEntryId !== null;
+  const saveBtn = document.getElementById('saveEntryBtn');
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  const title = document.querySelector('.quick-add-header h2');
+  saveBtn.textContent = isEditing ? "Mettre à jour le repas" : "Enregistrer le repas";
+  cancelBtn.classList.toggle('show', isEditing);
+  title.textContent = isEditing ? "Modifier le repas" : "Nouveau repas";
+}
+
+function editEntry(id) {
+  const entry = entries.find(e => String(e.id) === String(id));
+  if (!entry) {
+    showToast("Entrée introuvable", "var(--red)");
+    return;
+  }
+
+  editingEntryId = String(entry.id);
+  setMeal(entry.meal || selectedMeal);
+
+  selectedFoods = (entry.foods || []).map(food => {
+    const known = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(food.name));
+    if (known) {
+      return {name: known.name, score: clampScore(known.score), cat: known.cat, level: known.level};
+    }
+    return {
+      name: food.name,
+      score: clampScore(food.score),
+      cat: food.cat || "Personnalisé",
+      level: levelFromScore(food.score)
+    };
+  });
+  renderSelectedFoods();
+
+  activeContexts = Array.isArray(entry.contexts) ? [...new Set(entry.contexts)] : [];
+  document.querySelectorAll('.ctx-chip').forEach(chip => {
+    chip.classList.toggle('active', activeContexts.includes(chip.dataset.ctx));
+  });
+
+  const symptoms = entry.symptoms || {};
+  SYMPTOM_CATEGORIES.forEach(s => {
+    const val = Math.max(0, Math.min(10, Number(symptoms[s.id]) || 0));
+    document.getElementById('sym_' + s.id).value = val;
+    document.getElementById('val_' + s.id).textContent = String(val);
+  });
+
+  document.getElementById('mealTime').value = entry.mealTime || '';
+  document.getElementById('symptomTime').value = entry.symptomTime || '';
+  document.getElementById('mealNotes').value = entry.notes || '';
+  updateEditorState();
+  goToPage('journal');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  showToast("Mode modification activé", "var(--accent)");
+}
+
+function cancelEdit() {
+  if (editingEntryId === null) return;
+  resetForm();
+  showToast("Modification annulée", "var(--orange)");
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// TOAST
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  if (color) t.style.background = color;
+  else t.style.background = 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// RENDER HISTORY
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function getScoreColor(total) {
+  if (total === 0) return {bg:'var(--green-bg)', color:'var(--green)', label:'OK'};
+  if (total <= 5) return {bg:'var(--yellow-bg)', color:'var(--yellow)', label:'Léger'};
+  if (total <= 15) return {bg:'var(--orange-bg)', color:'var(--orange)', label:'Modéré'};
+  return {bg:'var(--red-bg)', color:'var(--red)', label:'Fort'};
+}
+
+function renderEntryHtml(e) {
+  const safeSymptoms = e.symptoms || {};
+  const safeContexts = Array.isArray(e.contexts) ? e.contexts : [];
+  const safeFoods = Array.isArray(e.foods) ? e.foods : [];
+  const totalSymptoms = Number.isFinite(Number(e.totalSymptoms))
+    ? Number(e.totalSymptoms)
+    : SYMPTOM_CATEGORIES.reduce((sum, s) => sum + (Number(safeSymptoms[s.id]) || 0), 0);
+  const sc = getScoreColor(totalSymptoms);
+  const foodTags = safeFoods.map(f => `<span class="he-food-tag level-badge l${clampScore(f.score)}">${f.name}</span>`).join('');
+  const safeId = escapeJsString(e.id);
+  const timeBits = [];
+  if (e.mealTime) timeBits.push(`Repas ${e.mealTime}`);
+  if (e.symptomTime) timeBits.push(`Symptômes ${e.symptomTime}`);
+
+  const symDetails = SYMPTOM_CATEGORIES
+    .filter(s => Number(safeSymptoms[s.id]) > 0)
+    .map(s => `${s.emoji}${safeSymptoms[s.id]}`)
+    .join('  ');
+
+  return `
+    <div class="history-entry">
+      <div class="he-header">
+        <div>
+          <span class="he-meal">${e.meal}</span>
+          <span class="he-time">${timeBits.join(' • ')}</span>
+        </div>
+        <div class="he-actions">
+          <span class="he-score-badge" style="background:${sc.bg};color:${sc.color};">
+            ${sc.label} ${totalSymptoms}/60
+          </span>
+          <button class="he-edit" onclick="editEntry('${safeId}')">Modifier</button>
+          <button class="he-delete" onclick="deleteEntry('${safeId}')">×</button>
+        </div>
+      </div>
+      <div class="he-foods">${foodTags}</div>
+      ${symDetails ? `<div class="he-symptoms">${symDetails}</div>` : ''}
+      ${e.notes ? `<div class="he-notes">${e.notes}</div>` : ''}
+      ${safeContexts.length ? `<div style="margin-top:4px;font-size:11px;color:var(--text3);">${safeContexts.join(', ')}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderTodayHistory() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayEntries = entries.filter(e => e.date === today).reverse();
+  const cont = document.getElementById('todayHistory');
+
+  if (todayEntries.length === 0) {
+    cont.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+      <p>Aucun repas enregistré aujourd'hui</p>
+    </div>`;
+    return;
+  }
+  cont.innerHTML = '<div class="card">' + todayEntries.map(renderEntryHtml).join('') + '</div>';
+}
+
+function renderFullHistory() {
+  const cont = document.getElementById('fullHistory');
+  if (entries.length === 0) {
+    cont.innerHTML = `<div class="empty-state"><p>Aucune donnée enregistrée</p></div>`;
+    return;
+  }
+
+  const byDate = {};
+  entries.forEach(e => {
+    if (!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  const dates = Object.keys(byDate).sort().reverse();
+  const opts = {weekday:'long', day:'numeric', month:'long'};
+
+  cont.innerHTML = dates.map(d => {
+    const dateLabel = new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', opts);
+    const dayEntries = byDate[d].reverse();
+    const dayTotal = dayEntries.reduce((s, e) => s + e.totalSymptoms, 0);
+    const sc = getScoreColor(dayTotal / dayEntries.length);
+    return `
+      <div class="day-header">${dateLabel}
+        <span style="float:right;font-size:11px;color:${sc.color};">moy. ${Math.round(dayTotal/dayEntries.length)}/60</span>
+      </div>
+      <div class="card">${dayEntries.map(renderEntryHtml).join('')}</div>
+    `;
+  }).join('');
+}
+
+function deleteEntry(id) {
+  const targetId = String(id);
+  const targetEntry = entries.find(e => String(e.id) === targetId);
+  if (!targetEntry) {
+    showToast("Entrée introuvable", "var(--red)");
+    return;
+  }
+
+  if (!confirm('Supprimer cette entrée ?')) return;
+  entries = entries.filter(e => String(e.id) !== targetId);
+
+  if (editingEntryId !== null && String(editingEntryId) === targetId) {
+    resetForm();
+  }
+
+  saveEntries();
+  renderTodayHistory();
+  renderFullHistory();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// FOOD DATABASE PAGE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let foodDbFilter = {cat: 'all', level: 'all', search: ''};
+
+function renderCategoryFilters() {
+  const catCont = document.getElementById('categoryFilters');
+  const cats = ['all', ...new Set([...FOOD_DB.map(f => f.cat), 'Personnalisé'])];
+  if (foodDbFilter.cat !== 'all' && !cats.includes(foodDbFilter.cat)) {
+    foodDbFilter.cat = 'all';
+  }
+  catCont.innerHTML = cats.map(c =>
+    `<button class="filter-chip ${foodDbFilter.cat===c?'active':''}" data-cat="${c}">${c==='all'?'Toutes':c}</button>`
+  ).join('');
+}
+
+function setupFoodDbPage() {
+  const catCont = document.getElementById('categoryFilters');
+  renderCategoryFilters();
+
+  catCont.addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    foodDbFilter.cat = chip.dataset.cat;
+    renderFoodDb();
+  });
+
+  document.getElementById('levelFilters').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.getElementById('levelFilters').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    foodDbFilter.level = chip.dataset.level;
+    renderFoodDb();
+  });
+
+  document.getElementById('foodDbSearch').addEventListener('input', e => {
+    foodDbFilter.search = e.target.value.toLowerCase();
+    renderFoodDb();
+  });
+
+  document.getElementById('foodCreateName').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    addFoodFromDbPage();
+  });
+
+  renderFoodDb();
+}
+
+function renderFoodDb() {
+  renderCategoryFilters();
+  let foods = [...FOOD_DB];
+  if (foodDbFilter.cat !== 'all') foods = foods.filter(f => f.cat === foodDbFilter.cat);
+  if (foodDbFilter.level !== 'all') foods = foods.filter(f => f.score === parseInt(foodDbFilter.level));
+  if (foodDbFilter.search) foods = foods.filter(f => f.name.toLowerCase().includes(foodDbFilter.search));
+
+  foods.sort((a,b) => a.score - b.score || a.name.localeCompare(b.name));
+
+  document.getElementById('foodDbList').innerHTML = foods.length === 0
+    ? '<div class="empty-state"><p>Aucun aliment trouvé</p></div>'
+    : foods.map(f => `
+      <div class="food-list-item">
+        <div class="fli-left">
+          <div class="fli-name">${f.name}</div>
+          <div class="fli-cat">${f.cat}</div>
+          <div class="fli-comment">${f.tip}</div>
+        </div>
+        <span class="level-badge l${f.score}">${f.level}</span>
+      </div>
+    `).join('');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// DASHBOARD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function renderDashboard() {
+  renderStats();
+  renderSymptomTimeline();
+  renderTopFoods();
+  renderCorrelations();
+  renderSymptomCategories();
+}
+
+function renderStats() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayEntries = entries.filter(e => e.date === today);
+  const last7 = getLast7Days();
+  const totalMeals = entries.length;
+  const avgSym = entries.length > 0
+    ? Math.round(entries.reduce((s,e) => s + e.totalSymptoms, 0) / entries.length * 10) / 10
+    : 0;
+
+  const uniqueFoods = new Set();
+  entries.forEach(e => e.foods.forEach(f => uniqueFoods.add(f.name)));
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent2);">${todayEntries.length}</div>
+      <div class="stat-label">Repas aujourd'hui</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green);">${totalMeals}</div>
+      <div class="stat-label">Total repas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:${avgSym > 10 ? 'var(--orange)' : 'var(--yellow)'};">${avgSym}</div>
+      <div class="stat-label">Moy. symptômes /60</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent2);">${uniqueFoods.size}</div>
+      <div class="stat-label">Aliments testés</div>
+    </div>
+  `;
+}
+
+function getLast7Days() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  return days;
+}
+
+function renderSymptomTimeline() {
+  const days = getLast7Days();
+  const maxPossible = 60;
+
+  const data = days.map(d => {
+    const dayEntries = entries.filter(e => e.date === d);
+    if (dayEntries.length === 0) return {date: d, avg: 0};
+    const avg = dayEntries.reduce((s,e) => s + e.totalSymptoms, 0) / dayEntries.length;
+    return {date: d, avg};
+  });
+
+  const maxVal = Math.max(...data.map(d => d.avg), 1);
+
+  document.getElementById('symptomTimeline').innerHTML = data.map(d => {
+    const h = Math.max(2, (d.avg / maxVal) * 100);
+    let color = 'var(--green)';
+    if (d.avg > 5) color = 'var(--yellow)';
+    if (d.avg > 15) color = 'var(--orange)';
+    if (d.avg > 25) color = 'var(--red)';
+    return `<div class="timeline-bar" style="height:${h}%;background:${color};" title="${Math.round(d.avg)}"></div>`;
+  }).join('');
+
+  const dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  document.getElementById('timelineLabels').innerHTML = data.map(d => {
+    const day = new Date(d.date + 'T12:00:00');
+    return `<div class="timeline-label">${dayNames[day.getDay()]}</div>`;
+  }).join('');
+}
+
+function renderTopFoods() {
+  const foodCounts = {};
+  entries.forEach(e => e.foods.forEach(f => {
+    foodCounts[f.name] = (foodCounts[f.name] || 0) + 1;
+  }));
+
+  const sorted = Object.entries(foodCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  const maxCount = sorted.length > 0 ? sorted[0][1] : 1;
+
+  document.getElementById('topFoodsChart').innerHTML = sorted.length === 0
+    ? '<div class="empty-state"><p>Pas encore de données</p></div>'
+    : sorted.map(([name, count]) => {
+      const dbFood = FOOD_DB.find(f => f.name === name);
+      const score = dbFood ? dbFood.score : 1;
+      const colors = ['var(--green)','var(--yellow)','var(--orange)','var(--red)'];
+      return `<div class="bar-row">
+        <span class="bar-label">${name}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${(count/maxCount)*100}%;background:${colors[score]};"></div>
+        </div>
+        <span class="bar-val">${count}x</span>
+      </div>`;
+    }).join('');
+}
+
+function renderCorrelations() {
+  // Calculate average symptom score when each food is present
+  const foodSymScores = {};
+  entries.forEach(e => {
+    e.foods.forEach(f => {
+      if (!foodSymScores[f.name]) foodSymScores[f.name] = {total: 0, count: 0, score: f.score};
+      foodSymScores[f.name].total += e.totalSymptoms;
+      foodSymScores[f.name].count += 1;
+    });
+  });
+
+  const sorted = Object.entries(foodSymScores)
+    .map(([name, data]) => ({name, avg: data.total / data.count, count: data.count, refScore: data.score}))
+    .filter(x => x.count >= 2) // At least 2 exposures
+    .sort((a,b) => b.avg - a.avg)
+    .slice(0, 10);
+
+  document.getElementById('correlationList').innerHTML = sorted.length === 0
+    ? '<div class="empty-state"><p>Au moins 2 expositions par aliment nécessaires</p></div>'
+    : sorted.map(item => {
+      const sc = getScoreColor(item.avg);
+      return `<div class="corr-item">
+        <span class="corr-food">${item.name}</span>
+        <span class="corr-count">${item.count}x</span>
+        <span class="corr-score" style="color:${sc.color};">moy. ${item.avg.toFixed(1)}</span>
+      </div>`;
+    }).join('');
+}
+
+function renderSymptomCategories() {
+  if (entries.length === 0) {
+    document.getElementById('symptomCatChart').innerHTML = '<div class="empty-state"><p>Pas encore de données</p></div>';
+    return;
+  }
+
+  const catTotals = {};
+  SYMPTOM_CATEGORIES.forEach(s => catTotals[s.id] = 0);
+  entries.forEach(e => {
+    SYMPTOM_CATEGORIES.forEach(s => {
+      catTotals[s.id] += e.symptoms[s.id] || 0;
+    });
+  });
+
+  const maxCat = Math.max(...Object.values(catTotals), 1);
+  const colors = {digestif:'#34d399',peau:'#f87171',neuro:'#a78bfa',respOrl:'#38bdf8',cardio:'#fb923c',autres:'#94a3b8'};
+
+  document.getElementById('symptomCatChart').innerHTML = SYMPTOM_CATEGORIES.map(s => `
+    <div class="bar-row">
+      <span class="bar-label">${s.emoji} ${s.label}</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(catTotals[s.id]/maxCat)*100}%;background:${colors[s.id]};"></div>
+      </div>
+      <span class="bar-val">${catTotals[s.id]}</span>
+    </div>
+  `).join('');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// DATA MANAGEMENT
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function exportData() {
+  const data = {
+    version: 2,
+    exportDate: new Date().toISOString(),
+    entries: entries,
+    customFoods: customFoods
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `histatrack_export_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Export téléchargé !");
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.entries && Array.isArray(data.entries)) {
+        const importedEntries = normalizeLoadedEntries(data.entries);
+        const newCount = importedEntries.length;
+        entries = [...entries, ...importedEntries];
+        // Deduplicate by id
+        const seen = new Set();
+        entries = entries.filter(e => {
+          const key = String(e.id);
+          if (seen.has(key)) return false;
+          seen.add(key); return true;
+        });
+
+        if (Array.isArray(data.customFoods)) {
+          const known = new Set(customFoods.map(f => normalizeFoodName(f.name)));
+          data.customFoods.forEach(item => {
+            const food = toFoodRecord(item);
+            if (!food) return;
+            const key = normalizeFoodName(food.name);
+            if (!key || known.has(key)) return;
+            known.add(key);
+            customFoods.push(food);
+            FOOD_DB.push(food);
+          });
+          saveCustomFoods();
+        }
+
+        saveEntries();
+        showToast(`${newCount} entrées importées !`);
+        renderTodayHistory();
+        if (document.getElementById('page-history').classList.contains('active')) renderFullHistory();
+        if (document.getElementById('page-foods').classList.contains('active')) renderFoodDb();
+        if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+      }
+    } catch (err) {
+      showToast("Erreur de format", "var(--red)");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function confirmClear() {
+  if (!confirm('Effacer TOUTES les données ? Cette action est irréversible.')) return;
+  if (!confirm('Vraiment sûr(e) ? Dernière chance...')) return;
+  entries = [];
+  editingEntryId = null;
+  customFoods = [];
+  FOOD_DB = FOOD_DB.filter(f => !f.isCustom);
+  localStorage.removeItem(CUSTOM_FOODS_STORAGE_KEY);
+  saveEntries();
+  resetForm();
+  showToast("Données effacées", "var(--orange)");
+  renderTodayHistory();
+  if (document.getElementById('page-history').classList.contains('active')) renderFullHistory();
+  if (document.getElementById('page-foods').classList.contains('active')) renderFoodDb();
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// START
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+init();
+</script>
+</body>
+</html>
