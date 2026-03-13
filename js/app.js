@@ -192,7 +192,9 @@ const RECIPE_PHOTO_POOLS = {
 };
 
 function getRecipePhotoUrl(recipe) {
-  return recipe.photo || null;
+  if (recipe.photo) return recipe.photo;
+  if (typeof RECIPE_PHOTOS !== 'undefined' && RECIPE_PHOTOS[recipe.id]) return RECIPE_PHOTOS[recipe.id];
+  return null;
 }
 
 // ═══ STATE ═══
