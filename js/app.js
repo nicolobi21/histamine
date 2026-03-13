@@ -192,14 +192,7 @@ const RECIPE_PHOTO_POOLS = {
 };
 
 function getRecipePhotoUrl(recipe) {
-  if (recipe.photo) return recipe.photo;
-  const pool = RECIPE_PHOTO_POOLS[recipe.category] || RECIPE_PHOTO_POOLS['plat'];
-  // Deterministic pick via hash of full recipe id for good distribution
-  let h = 0;
-  const key = recipe.id || recipe.name || '';
-  for (let i = 0; i < key.length; i++) h = ((h << 5) - h + key.charCodeAt(i)) >>> 0;
-  const id = pool[h % pool.length];
-  return `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&h=400&q=75`;
+  return recipe.photo || null;
 }
 
 // ═══ STATE ═══
@@ -579,7 +572,9 @@ HC.recipes = (() => {
         const emoji = getRecipeEmoji(r);
         const gradient = getCategoryGradient(r.category);
         const photoUrl = getRecipePhotoUrl(r);
-        const photoHtml = `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-card-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='none');this.parentElement.querySelector('.recipe-card-emoji').style.display=''"><div class="recipe-card-img-overlay"></div><span class="recipe-card-emoji" style="display:none">${emoji}</span>`;
+        const photoHtml = photoUrl
+          ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-card-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='none');this.parentElement.querySelector('.recipe-card-emoji').style.display=''"><div class="recipe-card-img-overlay"></div><span class="recipe-card-emoji" style="display:none">${emoji}</span>`
+          : `<span class="recipe-card-emoji">${emoji}</span>`;
 
         let matchBadge = '';
         if (r._match && selectedIngredients.length > 0) {
@@ -659,7 +654,9 @@ HC.recipes = (() => {
     const gradient = getCategoryGradient(r.category);
 
     const photoUrl = getRecipePhotoUrl(r);
-    const detailPhotoHtml = `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-detail-hero-img" onerror="this.style.display='none';this.nextElementSibling.style.display='none';this.parentElement.querySelector('.recipe-detail-hero-emoji').style.display=''"><div class="recipe-detail-hero-overlay"></div><span class="recipe-detail-hero-emoji" style="display:none">${emoji}</span>`;
+    const detailPhotoHtml = photoUrl
+      ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-detail-hero-img" onerror="this.style.display='none';this.nextElementSibling.style.display='none';this.parentElement.querySelector('.recipe-detail-hero-emoji').style.display=''"><div class="recipe-detail-hero-overlay"></div><span class="recipe-detail-hero-emoji" style="display:none">${emoji}</span>`
+      : `<span class="recipe-detail-hero-emoji">${emoji}</span>`;
     html += `<div class="recipe-detail">
       <div class="recipe-detail-hero" style="background:${gradient}">
         ${detailPhotoHtml}
@@ -1028,7 +1025,9 @@ HC.introduce = (() => {
     const emoji = getRecipeEmoji(r);
     const gradient = getCategoryGradient(r.category);
     const photoUrl = getRecipePhotoUrl(r);
-    const photoHtml = `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-card-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='none');this.parentElement.querySelector('.recipe-card-emoji').style.display=''"><div class="recipe-card-img-overlay"></div><span class="recipe-card-emoji" style="display:none">${emoji}</span>`;
+    const photoHtml = photoUrl
+      ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" class="recipe-card-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='none');this.parentElement.querySelector('.recipe-card-emoji').style.display=''"><div class="recipe-card-img-overlay"></div><span class="recipe-card-emoji" style="display:none">${emoji}</span>`
+      : `<span class="recipe-card-emoji">${emoji}</span>`;
     return `<div class="recipe-card" onclick="HC.recipes.openDetail('${r.id}');goToPage('recipes');">
       <div class="recipe-card-visual" style="background:${gradient}">
         ${photoHtml}
