@@ -324,28 +324,37 @@ function getToleranceStatusFuzzy(foodName) {
   const key = normalizeFoodName(foodName);
   // 1. Exact match
   if (toleranceData[key]) return toleranceData[key].status;
-  // 2. Prefix match: one is a prefix of the other (e.g. "Poulet" ↔ "Poulet frais")
+
+  // Helper: do two foods have similar histamine scores? Avoids matching "saumon frais" (score 0) with "saumon fume" (score 3)
+  function sameRiskLevel(nameA, nameB) {
+    const fa = FOOD_DB.find(f => normalizeFoodName(f.name) === nameA);
+    const fb = FOOD_DB.find(f => normalizeFoodName(f.name) === nameB);
+    if (!fa || !fb) return true; // unknown → allow fuzzy
+    return Math.abs(fa.score - fb.score) <= 1;
+  }
+
+  // 2. Prefix match: "Poulet" ↔ "Poulet frais"
   let best = null, bestLen = 0;
   for (const [tk, tv] of Object.entries(toleranceData)) {
     if (tk.startsWith(key) || key.startsWith(tk)) {
       const len = Math.min(tk.length, key.length);
-      if (len > bestLen) { bestLen = len; best = tv.status; }
+      if (len > bestLen && sameRiskLevel(key, tk)) { bestLen = len; best = tv.status; }
     }
   }
   if (best) return best;
-  // 3. First-word match: "Boeuf haché" ↔ "Boeuf frais", "Blancs de poulet" uses firstWord "blancs" — skip
-  //    But "Sole meunière" first word "sole" matches "Sole fraîche" ✓
+
+  // 3. First-word match: "Sole meunière" ↔ "Sole fraîche" (only if same risk level)
   const firstWord = key.split(' ')[0];
   if (firstWord.length >= 4) {
     for (const [tk, tv] of Object.entries(toleranceData)) {
-      if (tk.split(' ')[0] === firstWord) return tv.status;
+      if (tk.split(' ')[0] === firstWord && sameRiskLevel(key, tk)) return tv.status;
     }
   }
-  // 4. Substring match: "Blancs de poulet frais" contains "poulet", "Escalope de dinde" contains "dinde"
-  //    Find longest tolerance key that appears as a word-boundary substring (min 5 chars)
+
+  // 4. Substring match (min 5 chars, same risk level)
   let subBest = null, subBestLen = 0;
   for (const [tk, tv] of Object.entries(toleranceData)) {
-    if (tk.length >= 5 && key.includes(tk)) {
+    if (tk.length >= 5 && key.includes(tk) && sameRiskLevel(key, tk)) {
       if (tk.length > subBestLen) { subBestLen = tk.length; subBest = tv.status; }
     }
   }
@@ -370,8 +379,14 @@ function isFullyTolerated(recipe) {
   return recipe.ingredients.every(ing => {
     if (ing.optional) return true;
     if (isPantryFuzzy(ing.food)) return true;
+    // If explicitly not tolerated → block
     const status = getToleranceStatusFuzzy(ing.food);
-    return status === 'tolerated';
+    if (status === 'not_tolerated') return false;
+    // If explicitly tolerated → allow
+    if (status === 'tolerated') return true;
+    // Untested: allow if score 0 OR unknown in FOOD_DB (recipes are curated low-histamine)
+    const dbFood = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
+    return !dbFood || dbFood.score === 0;
   });
 }
 
