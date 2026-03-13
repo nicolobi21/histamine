@@ -13,6 +13,7 @@ function clampScore(score) { const n = Number(score); if (!Number.isFinite(n)) r
 function levelFromScore(score) { return ['Faible','Modéré','Élevé','Très élevé'][clampScore(score)]; }
 function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 function escapeAttr(str) { return escapeHtml(str).replace(/'/g, "&#39;"); }
+function escapeJs(str) { return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 
 function showToast(msg, color) {
   const t = document.getElementById('toast');
@@ -512,7 +513,7 @@ HC.recipes = (() => {
     if (toleratedFoods.length > 0 && selectedIngredients.length === 0) {
       html += `<div style="margin-bottom:14px;"><div style="display:flex;flex-wrap:wrap;gap:4px;">`;
       toleratedFoods.slice(0, 16).forEach(f => {
-        html += `<div class="ing-chip tolerated" onclick="HC.recipes.addIngredient('${escapeAttr(f.name)}')" style="font-size:11px;padding:4px 8px;">${escapeHtml(f.name)}</div>`;
+        html += `<div class="ing-chip tolerated" onclick="HC.recipes.addIngredient('${escapeJs(f.name)}')" style="font-size:11px;padding:4px 8px;">${escapeHtml(f.name)}</div>`;
       });
       if (toleratedFoods.length > 16) html += `<span style="font-size:11px;color:var(--text3);padding:4px;">+${toleratedFoods.length - 16}</span>`;
       html += `</div></div>`;
@@ -636,7 +637,7 @@ HC.recipes = (() => {
       ).slice(0, 8);
       if (results.length === 0) { suggestions.classList.remove('show'); return; }
       suggestions.innerHTML = results.map(f =>
-        `<div class="food-sug-item" onclick="HC.recipes.addIngredient('${escapeAttr(f.name)}')">
+        `<div class="food-sug-item" onclick="HC.recipes.addIngredient('${escapeJs(f.name)}')">
           <div><div class="food-sug-name">${escapeHtml(f.name)}</div><div class="food-sug-cat">${f.cat}</div></div>
           <span class="level-badge l${f.score}">${f.level}</span>
         </div>`
@@ -955,7 +956,7 @@ HC.tolerance = (() => {
     list.innerHTML = foods.map(f => {
       const status = getToleranceStatus(f.name);
       const safeName = escapeHtml(f.name);
-      const safeNameAttr = escapeAttr(f.name);
+      const safeNameAttr = escapeJs(f.name);
       return `<div class="tolerance-item">
         <div style="flex:1;">
           <div class="fli-name">${safeName}</div>
@@ -1075,7 +1076,7 @@ HC.introduce = (() => {
       testable.forEach(item => {
         const fd = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(item.name));
         const score = fd ? fd.score : 1;
-        html += `<div class="card" style="cursor:pointer;" onclick="HC.introduce.selectFood('${escapeAttr(item.name)}')">
+        html += `<div class="card" style="cursor:pointer;" onclick="HC.introduce.selectFood('${escapeJs(item.name)}')">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div>
               <div style="font-weight:500;margin-bottom:3px;">${escapeHtml(item.name)}</div>
@@ -1178,7 +1179,7 @@ HC.journal = (() => {
       const results = FOOD_DB.filter(f => f.name.toLowerCase().includes(q) || f.cat.toLowerCase().includes(q)).slice(0, 8);
       if (results.length === 0) { suggestions.classList.remove('show'); return; }
       suggestions.innerHTML = results.map(f =>
-        `<div class="food-sug-item" onclick="HC.journal.selectFood('${escapeAttr(f.name)}')">
+        `<div class="food-sug-item" onclick="HC.journal.selectFood('${escapeJs(f.name)}')">
           <div><div class="food-sug-name">${f.name}</div><div class="food-sug-cat">${f.cat}</div></div>
           <span class="level-badge l${f.score}">${f.level}</span>
         </div>`
