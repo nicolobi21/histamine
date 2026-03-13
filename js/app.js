@@ -384,10 +384,8 @@ function isFullyTolerated(recipe) {
     if (status === 'not_tolerated') return false;
     // If explicitly tolerated → allow
     if (status === 'tolerated') return true;
-    // Untested: allow only if known in FOOD_DB AND score 0
-    // Unknown ingredients (not in FOOD_DB) are NOT auto-allowed — they must be tested
-    const dbFood = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
-    return dbFood && dbFood.score === 0;
+    // Everything else (untested, unknown) → block. Must be explicitly tolerated.
+    return false;
   });
 }
 
@@ -405,16 +403,13 @@ function getAlmostTolerated(allRecipes) {
     );
     if (hasBlocked) return;
 
-    // Find blocking ingredients (untested, not score-0)
+    // Find blocking ingredients (anything not explicitly tolerated)
     const blocking = recipe.ingredients.filter(ing => {
       if (ing.optional) return false;
       if (isPantryFuzzy(ing.food)) return false;
       const status = getToleranceStatusFuzzy(ing.food);
       if (status === 'tolerated') return false;
-      // Known in FOOD_DB with score 0 → safe, not blocking
-      const dbFood = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
-      if (dbFood && dbFood.score === 0) return false;
-      // Unknown in FOOD_DB OR score > 0 → blocking
+      // Everything else → blocking
       return true;
     });
 
@@ -1112,6 +1107,7 @@ HC.tolerance = (() => {
   let searchQuery = '';
   let filterCat = 'all';
   let filterStatus = 'all';
+  let filterScore = 'all';
 
   function render() {
     autoSuggestTolerance();
@@ -1130,6 +1126,7 @@ HC.tolerance = (() => {
     if (filterCat !== 'all') foods = foods.filter(f => f.cat === filterCat);
     if (searchQuery) foods = foods.filter(f => f.name.toLowerCase().includes(searchQuery));
     if (filterStatus !== 'all') foods = foods.filter(f => getToleranceStatus(f.name) === filterStatus);
+    if (filterScore !== 'all') foods = foods.filter(f => f.score === Number(filterScore));
     foods.sort((a, b) => a.name.localeCompare(b.name));
 
     const list = document.getElementById('toleranceList');
@@ -1170,6 +1167,14 @@ HC.tolerance = (() => {
       document.getElementById('toleranceStatusFilters').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       filterStatus = chip.dataset.status;
+      renderList();
+    };
+    document.getElementById('toleranceScoreFilters').onclick = e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      document.getElementById('toleranceScoreFilters').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filterScore = chip.dataset.score;
       renderList();
     };
   }
