@@ -582,7 +582,7 @@ HC.recipes = (() => {
       selectedIngredients.forEach((name, i) => {
         const db = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(name));
         const score = db ? db.score : 0;
-        html += `<div class="food-tag level-${score}" onclick="HC.recipes.removeIngredient(${i})">${escapeHtml(name)} <span class="remove">×</span></div>`;
+        html += `<div class="food-tag level-${score}" onclick="HC.recipes.removeIngredient(${i})">${escapeHtml(name)}${db && db.gluten ? ' 🌾' : ''} <span class="remove">×</span></div>`;
       });
       html += `<div class="food-tag" style="background:var(--bg3);color:var(--text3);cursor:pointer;" onclick="HC.recipes.clearIngredients()">Tout effacer ×</div>`;
       html += `</div>`;
@@ -592,7 +592,7 @@ HC.recipes = (() => {
     if (toleratedFoods.length > 0 && selectedIngredients.length === 0) {
       html += `<div style="margin-bottom:14px;"><div style="display:flex;flex-wrap:wrap;gap:4px;">`;
       toleratedFoods.slice(0, 16).forEach(f => {
-        html += `<div class="ing-chip tolerated" onclick="HC.recipes.addIngredient('${escapeJs(f.name)}')" style="font-size:11px;padding:4px 8px;">${escapeHtml(f.name)}</div>`;
+        html += `<div class="ing-chip tolerated" onclick="HC.recipes.addIngredient('${escapeJs(f.name)}')" style="font-size:11px;padding:4px 8px;">${escapeHtml(f.name)}${f.gluten ? ' 🌾' : ''}</div>`;
       });
       if (toleratedFoods.length > 16) html += `<span style="font-size:11px;color:var(--text3);padding:4px;">+${toleratedFoods.length - 16}</span>`;
       html += `</div></div>`;
@@ -1294,7 +1294,7 @@ HC.introduce = (() => {
               <div style="font-size:12px;color:var(--text3);">${item.recipes.length} recette${item.recipes.length > 1 ? 's' : ''} éligible${item.recipes.length > 1 ? 's' : ''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-              <span class="level-badge l${score}">${levelFromScore(score)}</span>
+              ${fd && fd.gluten ? '<span style="font-size:11px;" title="Contient du gluten">🌾</span>' : ''}<span class="level-badge l${score}">${levelFromScore(score)}</span>
               <svg style="width:16px;height:16px;color:var(--text3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </div>
@@ -1317,7 +1317,7 @@ HC.introduce = (() => {
           <div style="font-size:36px;">🧪</div>
           <div style="flex:1;">
             <div style="font-weight:600;font-size:15px;margin-bottom:4px;">${escapeHtml(selectedTestFood)}</div>
-            <div style="font-size:12px;color:var(--text2);">Niveau : <span class="level-badge l${score}">${levelFromScore(score)}</span></div>
+            <div style="font-size:12px;color:var(--text2);">Niveau : <span class="level-badge l${score}">${levelFromScore(score)}</span>${fd && fd.gluten ? ' <span style="font-size:11px;" title="Contient du gluten">🌾</span>' : ''}</div>
             <div style="font-size:12px;color:var(--text3);margin-top:3px;">${recipes.length} recette${recipes.length !== 1 ? 's' : ''} disponible${recipes.length !== 1 ? 's' : ''}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;">
@@ -1459,9 +1459,10 @@ HC.journal = (() => {
   }
 
   function renderSelectedFoods() {
-    document.getElementById('selectedFoods').innerHTML = selectedFoods.map((f, i) =>
-      `<div class="food-tag level-${f.score}" onclick="HC.journal.removeFood(${i})">${escapeHtml(f.name)} <span class="remove">×</span></div>`
-    ).join('');
+    document.getElementById('selectedFoods').innerHTML = selectedFoods.map((f, i) => {
+      const dbF = FOOD_DB.find(d => normalizeFoodName(d.name) === normalizeFoodName(f.name));
+      return `<div class="food-tag level-${f.score}" onclick="HC.journal.removeFood(${i})">${escapeHtml(f.name)}${dbF && dbF.gluten ? ' 🌾' : ''} <span class="remove">×</span></div>`;
+    }).join('');
   }
 
   function removeFood(idx) { selectedFoods.splice(idx, 1); renderSelectedFoods(); }
@@ -1560,7 +1561,10 @@ HC.journal = (() => {
     const safeContexts = Array.isArray(e.contexts) ? e.contexts : [];
     const totalSymptoms = Number.isFinite(Number(e.totalSymptoms)) ? Number(e.totalSymptoms) : SYMPTOM_CATEGORIES.reduce((sum, s) => sum + (Number(safeSymptoms[s.id]) || 0), 0);
     const sc = getScoreColor(totalSymptoms);
-    const foodTags = safeFoods.map(f => `<span class="he-food-tag level-badge l${clampScore(f.score)}">${escapeHtml(f.name)}</span>`).join('');
+    const foodTags = safeFoods.map(f => {
+      const dbF = FOOD_DB.find(d => normalizeFoodName(d.name) === normalizeFoodName(f.name));
+      return `<span class="he-food-tag level-badge l${clampScore(f.score)}">${escapeHtml(f.name)}${dbF && dbF.gluten ? ' 🌾' : ''}</span>`;
+    }).join('');
     const timeBits = [];
     if (e.mealTime) timeBits.push(`Repas ${e.mealTime}`);
     if (e.symptomTime) timeBits.push(`Symptômes ${e.symptomTime}`);
