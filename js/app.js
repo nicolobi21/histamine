@@ -451,6 +451,7 @@ HC.recipes = (() => {
   let currentPortions = 2;
   let filterCategory = 'all';
   let filterSearch = '';
+  let filterGlutenFree = localStorage.getItem('filterGlutenFree') === 'true';
   let displayLimit = 32; // lazy-load more recipes
   let selectedMissingFood = null; // filter section 2 by missing ingredient
   let displayLimitAlmost = 16; // lazy-load section 2
@@ -471,6 +472,14 @@ HC.recipes = (() => {
   }
   let filterMealType = getDefaultMealFilter();
 
+  function recipeHasGluten(recipe) {
+    return recipe.ingredients.some(ing => {
+      if (ing.optional) return false;
+      const db = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
+      return db && db.gluten;
+    });
+  }
+
   function getAllRecipes() {
     const batches = [
       typeof RECIPE_DB !== 'undefined' ? RECIPE_DB : [],
@@ -482,6 +491,7 @@ HC.recipes = (() => {
       typeof RECIPES_BATCH_6 !== 'undefined' ? RECIPES_BATCH_6 : [],
       typeof RECIPES_BATCH_7 !== 'undefined' ? RECIPES_BATCH_7 : [],
       typeof RECIPES_BATCH_8 !== 'undefined' ? RECIPES_BATCH_8 : [],
+      typeof RECIPES_BATCH_9 !== 'undefined' ? RECIPES_BATCH_9 : [],
       ...customRecipes,
     ];
     // Deduplicate by id
@@ -609,6 +619,11 @@ HC.recipes = (() => {
     });
     html += `</div>`;
 
+    // Gluten-free toggle
+    html += `<div style="margin:6px 0 2px 0;">
+      <button class="filter-chip ${filterGlutenFree ? 'active' : ''}" onclick="HC.recipes.toggleGlutenFree()" style="${filterGlutenFree ? 'border-color:var(--accent);' : ''}">🌾 Sans gluten</button>
+    </div>`;
+
     // Apply filters: category + meal type + name search
     let recipes = allTolerated;
     if (filterCategory !== 'all') recipes = recipes.filter(r => r.category === filterCategory);
@@ -621,6 +636,7 @@ HC.recipes = (() => {
         (r.tips && r.tips.toLowerCase().includes(q))
       );
     }
+    if (filterGlutenFree) recipes = recipes.filter(r => !recipeHasGluten(r));
 
     // If ingredients selected, compute match and sort; otherwise sort by histamine
     if (selectedIngredients.length > 0) {
@@ -1019,6 +1035,7 @@ HC.recipes = (() => {
     setCatFilter(cat) { filterCategory = cat; displayLimit = 32; displayLimitAlmost = 16; render(); },
     setMealFilter(mt) { filterMealType = mt; displayLimit = 32; displayLimitAlmost = 16; render(); },
     setSearch(val) { filterSearch = val; displayLimit = 32; displayLimitAlmost = 16; render(); },
+    toggleGlutenFree() { filterGlutenFree = !filterGlutenFree; localStorage.setItem('filterGlutenFree', filterGlutenFree); displayLimit = 32; displayLimitAlmost = 16; render(); },
     loadMore() { displayLimit += 32; render(); },
     loadMoreAlmost() { displayLimitAlmost += 16; render(); },
     selectMissingFood(name) { selectedMissingFood = name; displayLimitAlmost = 16; render(); },
