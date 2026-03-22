@@ -822,7 +822,7 @@ HC.recipes = (() => {
       suggestions.innerHTML = results.map(f =>
         `<div class="food-sug-item" onclick="HC.recipes.addIngredient('${escapeJs(f.name)}')">
           <div><div class="food-sug-name">${escapeHtml(f.name)}</div><div class="food-sug-cat">${f.cat}</div></div>
-          <span class="level-badge l${f.score}">${f.level}</span>
+          <span>${f.gluten ? '<span style="font-size:11px;margin-right:4px;" title="Contient du gluten">🌾</span>' : ''}<span class="level-badge l${f.score}">${f.level}</span></span>
         </div>`
       ).join('');
       suggestions.classList.add('show');
@@ -872,8 +872,10 @@ HC.recipes = (() => {
       const tol = getToleranceStatus(ing.food);
       const tolStyle = tol === 'not_tolerated' ? 'color:var(--red);' : tol === 'tolerated' ? 'color:var(--green);' : '';
       const qty = ing.qty ? Math.round(ing.qty * ratio * 10) / 10 : '';
+      const dbF = FOOD_DB.find(f => normalizeFoodName(f.name) === normalizeFoodName(ing.food));
+      const glutenIcon = dbF && dbF.gluten ? ' <span style="font-size:11px;" title="Contient du gluten">🌾</span>' : '';
       html += `<li style="${tolStyle}">
-        <span>${escapeHtml(ing.food)}${ing.optional ? ' <em style="font-size:11px;color:var(--text3);">(optionnel)</em>' : ''}</span>
+        <span>${escapeHtml(ing.food)}${glutenIcon}${ing.optional ? ' <em style="font-size:11px;color:var(--text3);">(optionnel)</em>' : ''}</span>
         <span class="ingredient-qty">${qty} ${ing.unit || ''}</span>
       </li>`;
     });
@@ -1159,7 +1161,7 @@ HC.tolerance = (() => {
       return `<div class="tolerance-item">
         <div style="flex:1;">
           <div class="fli-name">${safeName}</div>
-          <div class="fli-cat">${f.cat} · <span class="level-badge l${f.score}" style="padding:2px 6px;font-size:10px;">${f.level}</span></div>
+          <div class="fli-cat">${f.cat} · <span class="level-badge l${f.score}" style="padding:2px 6px;font-size:10px;">${f.level}</span>${f.gluten ? ' <span style="font-size:11px;" title="Contient du gluten">🌾</span>' : ''}</div>
         </div>
         <div class="tolerance-toggle">
           <button class="tol-btn ${status === 'tolerated' ? 'active-ok' : ''}" onclick="HC.tolerance.set('${safeNameAttr}','tolerated')" title="Toléré">✓</button>
@@ -1390,7 +1392,7 @@ HC.journal = (() => {
       suggestions.innerHTML = results.map(f =>
         `<div class="food-sug-item" onclick="HC.journal.selectFood('${escapeJs(f.name)}')">
           <div><div class="food-sug-name">${f.name}</div><div class="food-sug-cat">${f.cat}</div></div>
-          <span class="level-badge l${f.score}">${f.level}</span>
+          <span>${f.gluten ? '<span style="font-size:11px;margin-right:4px;" title="Contient du gluten">🌾</span>' : ''}<span class="level-badge l${f.score}">${f.level}</span></span>
         </div>`
       ).join('');
       suggestions.classList.add('show');
